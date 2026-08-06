@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telegram Seeding Admin</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>🎛 Seeding Admin</h1>
+        <p>Quản lý kịch bản tương tác</p>
+      </div>
+      <div class="view-tabs" id="viewTabs">
+        <button type="button" class="view-tab active" data-view="scenarios">Kịch bản</button>
+        <button type="button" class="view-tab" data-view="sessions">Sessions</button>
+      </div>
+      <div id="sidebarScenarios">
+      <div class="stats" id="queueStats">Đang tải...</div>
+      <div class="stats bcr-stats" id="bcrStats">BCR: đang tải...</div>
+      <div class="filter-tabs" id="filterTabs">
+        <button type="button" class="tab active" data-filter="manual">Manual</button>
+        <button type="button" class="tab tab-win" data-filter="win">Khen</button>
+        <button type="button" class="tab tab-draw" data-filter="draw">Hòa/Hỏi</button>
+        <button type="button" class="tab tab-lose" data-filter="lose">Thắc mắc</button>
+        <button type="button" class="tab tab-qa" data-filter="qa">Hỏi đáp</button>
+      </div>
+      <button class="btn btn-primary full" id="btnNew">+ Tạo kịch bản</button>
+      <div class="scenario-list" id="scenarioList"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="scenariosView">
+      <div id="emptyState" class="empty">
+        <h2>Chọn hoặc tạo kịch bản</h2>
+        <p>Thiết lập group, account, nội dung và thời gian cho từng bước</p>
+      </div>
+
+      <form id="scenarioForm" class="editor hidden">
+        <header class="editor-header">
+          <div>
+            <input type="text" id="scenarioName" placeholder="Tên kịch bản" required />
+            <div class="meta-row">
+              <label>
+                Group
+                <select id="groupId" required></select>
+              </label>
+              <label>
+                Bắt đầu lúc
+                <input type="datetime-local" id="scheduledAt" />
+              </label>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" id="btnDelete">Xóa</button>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <button type="button" class="btn btn-success" id="btnRun">▶ Chạy ngay</button>
+          </div>
+        </header>
+
+        <section class="steps-section">
+          <div class="steps-header">
+            <h3>Các bước tương tác</h3>
+            <button type="button" class="btn btn-sm" id="btnAddStep">+ Thêm bước</button>
+          </div>
+          <div id="stepsContainer"></div>
+        </section>
+
+        <div id="runStatus" class="run-status hidden"></div>
+      </form>
+      </div>
+
+      <div id="sessionsView" class="sessions-panel hidden">
+        <header class="sessions-header">
+          <div>
+            <h2>Quản lý Session</h2>
+            <p class="muted">Import Telethon (.session / .tho) → Gia công GramJS → Lọc session chết</p>
+          </div>
+          <button type="button" class="btn" id="btnRefreshSessions">↻ Làm mới</button>
+        </header>
+
+        <div class="stats" id="sessionStats">Đang tải...</div>
+
+        <section class="sessions-actions">
+          <div class="action-card">
+            <h3>1. Import session</h3>
+            <p>Chọn một hoặc nhiều file <code>.session</code> / <code>.tho</code> (Telethon SQLite)</p>
+            <input type="file" id="sessionFileInput" multiple accept=".session,.tho" />
+            <button type="button" class="btn btn-primary" id="btnImportSessions">⬆ Import</button>
+            <div id="importLog" class="action-log"></div>
+          </div>
+
+          <div class="action-card">
+            <h3>1.5. Login clone</h3>
+            <p>Đăng nhập một clone Telegram và lưu session vào thư mục <code>clones/</code></p>
+            <label class="inline-label">
+              Clone ID
+              <input type="text" id="loginCloneId" placeholder="clone_a" />
+            </label>
+            <button type="button" class="btn btn-primary" id="btnLoginSession">🔐 Login</button>
+            <div id="loginLog" class="action-log"></div>
+          </div>
+
+          <div class="action-card">
+            <h3>2. Gia công</h3>
+            <p>Convert → GramJS string → <code>sessions.manifest.json</code></p>
+            <button type="button" class="btn btn-primary" id="btnBuildSessions">⚙ Gia công</button>
+            <button type="button" class="btn" id="btnSyncManifest">↔ Sync config</button>
+            <div class="job-panel hidden" id="buildJobPanel">
+              <div class="job-badge" id="buildJobBadge">Chờ</div>
+              <div class="progress-track"><div class="progress-fill" id="buildProgressFill"></div></div>
+              <div class="progress-meta" id="buildProgressMeta">—</div>
+            </div>
+            <div id="buildLog" class="action-log"></div>
+          </div>
+
+          <div class="action-card">
+            <h3>3. Lọc session chết</h3>
+            <p>Check live qua Telegram API, xóa nick chết khỏi manifest</p>
+            <label class="inline-label">
+              Concurrency
+              <input type="number" id="filterConcurrency" min="1" max="10" value="3" />
+            </label>
+            <button type="button" class="btn btn-danger" id="btnFilterSessions">🔍 Lọc session</button>
+            <div class="job-panel hidden" id="filterJobPanel">
+              <div class="job-badge" id="filterJobBadge">Chờ</div>
+              <div class="progress-track"><div class="progress-fill" id="filterProgressFill"></div></div>
+              <div class="progress-meta" id="filterProgressMeta">—</div>
+            </div>
+            <div id="filterLog" class="action-log"></div>
+          </div>
+        </section>
+
+        <section class="sessions-tables">
+          <div class="table-block">
+            <h3>📂 File chờ gia công (<span id="pendingCount">0</span>)</h3>
+            <ul id="pendingList" class="session-list"></ul>
+          </div>
+          <div class="table-block">
+            <h3>✅ Session sống (<span id="aliveCount">0</span>)</h3>
+            <ul id="aliveList" class="session-list"></ul>
+          </div>
+          <div class="table-block">
+            <h3>💀 Session chết (<span id="deadCount">0</span>)</h3>
+            <ul id="deadList" class="session-list dead"></ul>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="/app.js?v=5"></script>
+  <script src="/sessions.js?v=5"></script>
+</body>
+</html>

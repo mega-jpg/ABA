@@ -1,0 +1,124 @@
+{
+  "mode": "preset",
+  "clones": [
+    {
+      "id": "+66969748624",
+      "enabled": true,
+      "session": "1BQANOTEuMTA4LjU2LjEzMAG7Du97O6yppSDxxvjZINufqcW4xFM8ND6ZiEigM4gctuYP0YSFXILTzvKejsEBkUi2/LSYHVMZ56+gE5vjjzWHTWv/IFarf3y8C+x3qJ+I5xDhCKdIP9WLzNNQRQ2067D0aRN9BFPpk3q8N77zg/rSLjXhy6FCmOAaGFKLZhOYzPL7JxpHGnq0I3xn2msiGfnUOPEwRlX4TWpmV06EE81Rotuw7gdjbM8VIoTY/srdnlYrfvWxa/apX7tzRjOg6CbkmrpB07jMM/dUBPQ3SsGlhoFOC3Y+kxP0a0idL0bKZ42KrVziQD9MmfUFdHBEGUIB5WVukhuVXHQKHL9iBZjDow==",
+      "label": "B哥"
+    },
+    {
+      "id": "+66973381402",
+      "enabled": true,
+      "session": "1BQANOTEuMTA4LjU2LjEzMAG7dCVWUbavkcOjXtRWCl3+4ebbPPUWkKRu+ogRuySsrz68oWV6S9eJ5hhBTuoc9HUhHJ3fK1v4ziByaxp+m3z68o2l4EzupqHBRsyQVEg8Kc9H6w3FtlcVq6nSSDQy8C69FIw0Mj57x4RnWQKVQo/b+A8dcSgE2qL+HOY2x8uZDBOqVc9fE3DKBJYMzjY/uWHL48ivJ85/359Yze45i8Dt2KGHM4cSU9zUJD3wjqpg8/Z83vKfHGvzgrEdQjeB59tn5mk6OsbM+AmprD0H12Emzjr396W4Lylqfs+9Gu681/DoVeimsv89AhjMbmZLelpVUPrDWXKN03ysmaUT7251/A==",
+      "label": "Michelle"
+    },
+    {
+      "id": "+66996374604",
+      "enabled": true,
+      "session": "1BQANOTEuMTA4LjU2LjEzMAG7vrsE96okYdSWZLJLDJATTz/CBj++57vZjr+HQqgieqfLv8a2f3D75d6QLcxXgjbZgUr9OZThQVHXXMEGcxaNWSj9NU4yIFhKij804bTl3kk63kqt7mCEdzbynM2VvSRzXC21/NxnycfEaAafmwjXCnzpIrWiWIDK5aFUCw10pwpRTq+ohikmaANEXTngoVqnlMEDYgK04zzuwCISmuo9SSf3O/s8QVqFYe9UYNdebl1GYmLAVcawVxQT6WPjpMaxEoK0+okX4JrY3bxlPQoDrc1lWd4svmHthRR8avRsx0Bq2P3H3EHes8wu5mrQdK2nnOArjqHHiK9AKr09vD2ShA==",
+      "label": "fc"
+    },
+    {
+      "id": "84326098841",
+      "enabled": false,
+      "session": "1BQANOTEuMTA4LjU2LjE1MgG7V7JR3fEWeMBxZOjTCaT/DLDCf/itvmk60d2tq5aUPVZ16gPxQQHWddd0i2mlmVx5e9MthHNRXVbKQJmiXAVF7QtSmJEtCJo8k28Ae07dVmYoNkOZDpEW7oGxVJRu7RXaWe8VbO9ONc4+MvacXPsKS1qSNKvRpAI8VWa3B6Ox6iFCcBTHBlIBzn9Ier1tWniAFPKWrCWEKzog1tsaehKZYo6NAk/pJ0YdvGvRhqK4/yKjqxlHztZw9/wUf1v7XZV0vZkccmA1addode1MqurBJaY8zJweCV9SttTaSCmnf6d8mZphjWR/a3B5CrWZ+P7wLQnuuVc5eTvN1C7gAUD5lA==",
+      "label": "Nguyễn Thu"
+    }
+  ],
+  "groups": [
+    {
+      "id": "-1002814531733",
+      "name": "Nhóm ảo 1 (bot chính)",
+      "enabled": true
+    },
+    {
+      "id": "-1002740789341",
+      "name": "Nhóm ảo 2 (bot chính)",
+      "enabled": true
+    },
+    {
+      "id": "-1002576691544",
+      "name": "⚜️𝟗 𝐍Ú𝐓 𝐓𝐇Ô𝐍𝐆 𝟓 𝐋Ệ𝐍𝐇 - ( G.K.8.8 ) ⚜️",
+      "enabled": true,
+      "inviteLink": "https://t.me/+Y78JXD65lQIwNmI1"
+    },
+    {
+      "id": "-1003940125395",
+      "name": "⚜️ 𝟗 𝐍Ú𝐓 𝐓𝐇Ô𝐍𝐆 ( G.K.8.8 ) ⚜️️",
+      "enabled": true,
+      "inviteLink": "https://t.me/+2MgLzV8kSaQxZTE1"
+    },
+    {
+      "id": "-1002881857888",
+      "name": "⚜️𝟗 𝐍Ú𝐓 𝐓𝐇Ô𝐍𝐆 𝟏 𝐋Ệ𝐍𝐇 - ( G.K.8.8 ) ⚜️",
+      "enabled": true,
+      "inviteLink": "https://t.me/+O3S3UyXmF9BhNjdl"
+    },
+    {
+      "id": "-1003514385324",
+      "name": "VÀO CÓ 1 CHIỆU 💴💶",
+      "enabled": false
+    },
+    {
+      "id": "-1003622887277",
+      "name": "⚜️ PHÒNG CHỜ THƯƠNG GIA ⚜️",
+      "enabled": false
+    }
+  ],
+  "target": {
+    "groupId": "-5290958067",
+    "pickGroup": "first"
+  },
+  "qaAskers": {
+    "cloneIds": [
+      "+66973381402",
+      "+66969748624",
+      "+66996374604"
+    ],
+    "maxQuestionsPerAsker": 2
+  },
+  "interaction": {
+    "preset": {
+      "name": "Kịch bản chào group",
+      "steps": [
+        {
+          "cloneId": "84326098841",
+          "action": "send_message",
+          "text": "Xin chào mọi người, mình mới vào group 👋",
+          "delayBeforeSec": 5
+        },
+        {
+          "cloneId": "84326098841",
+          "action": "react",
+          "reaction": "👍",
+          "replyToPrevious": true,
+          "delayBeforeSec": 15
+        }
+      ]
+    },
+    "random": {
+      "minSteps": 1,
+      "maxSteps": 3,
+      "messages": [
+        "Sản phẩm này có tốt không mọi người? 🤔",
+        "Mình thấy ổn áp lắm nha 👍",
+        "Có ai dùng rồi cho xin review với",
+        "Group này sôi động ghê 😄"
+      ],
+      "reactions": [
+        "👍",
+        "❤️",
+        "🔥",
+        "😂"
+      ],
+      "actions": [
+        "send_message",
+        "react"
+      ],
+      "delayMinSec": 10,
+      "delayMaxSec": 40,
+      "pickClone": "random"
+    }
+  }
+}

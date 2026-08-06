@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-07-07T08:26:21.646Z",
+  "sessionsDir": "clones/sessions",
+  "groups": [
+    {
+      "groupId": "-5290958067",
+      "name": "thattest",
+      "enabled": true,
+      "inviteLink": "https://t.me/+imFgi7ZHTZY5NGM1"
+    },
+    {
+      "groupId": "-1003709178070",
+      "name": "🏆 MẠNH NHẤT 2026🏆",
+      "enabled": false
+    },
+    {
+      "groupId": "-1003514385324",
+      "name": "VÀO CÓ 1 CHIỆU 💴💶",
+      "enabled": false
+    },
+    {
+      "groupId": "-1003622887277",
+      "name": "⚜️ PHÒNG CHỜ THƯƠNG GIA ⚜️",
+      "enabled": false
+    }
+  ],
+  "sessions": [
+    {
+      "id": "+66969748624",
+      "session": "1BQANOTEuMTA4LjU2LjEzMAG7Du97O6yppSDxxvjZINufqcW4xFM8ND6ZiEigM4gctuYP0YSFXILTzvKejsEBkUi2/LSYHVMZ56+gE5vjjzWHTWv/IFarf3y8C+x3qJ+I5xDhCKdIP9WLzNNQRQ2067D0aRN9BFPpk3q8N77zg/rSLjXhy6FCmOAaGFKLZhOYzPL7JxpHGnq0I3xn2msiGfnUOPEwRlX4TWpmV06EE81Rotuw7gdjbM8VIoTY/srdnlYrfvWxa/apX7tzRjOg6CbkmrpB07jMM/dUBPQ3SsGlhoFOC3Y+kxP0a0idL0bKZ42KrVziQD9MmfUFdHBEGUIB5WVukhuVXHQKHL9iBZjDow==",
+      "convertedFrom": "telethon",
+      "sourceFile": "clones/sessions/+66969748624.session",
+      "dcId": 5,
+      "server": "91.108.56.130:443",
+      "enabled": true,
+      "userId": "7652279596",
+      "username": "bzong888",
+      "firstName": "B哥"
+    },
+    {
+      "id": "+66973381402",
+      "session": "1BQANOTEuMTA4LjU2LjEzMAG7dCVWUbavkcOjXtRWCl3+4ebbPPUWkKRu+ogRuySsrz68oWV6S9eJ5hhBTuoc9HUhHJ3fK1v4ziByaxp+m3z68o2l4EzupqHBRsyQVEg8Kc9H6w3FtlcVq6nSSDQy8C69FIw0Mj57x4RnWQKVQo/b+A8dcSgE2qL+HOY2x8uZDBOqVc9fE3DKBJYMzjY/uWHL48ivJ85/359Yze45i8Dt2KGHM4cSU9zUJD3wjqpg8/Z83vKfHGvzgrEdQjeB59tn5mk6OsbM+AmprD0H12Emzjr396W4Lylqfs+9Gu681/DoVeimsv89AhjMbmZLelpVUPrDWXKN03ysmaUT7251/A==",
+      "convertedFrom": "telethon",
+      "sourceFile": "clones/sessions/+66973381402.session",
+      "dcId": 5,
+      "server": "91.108.56.130:443",
+      "enabled": true,
+      "userId": "7228179947",
+      "firstName": "Michelle"
+    },
+    {
+      "id": "+66996374604",
+      "session": "1BQANOTEuMTA4LjU2LjEzMAG7vrsE96okYdSWZLJLDJATTz/CBj++57vZjr+HQqgieqfLv8a2f3D75d6QLcxXgjbZgUr9OZThQVHXXMEGcxaNWSj9NU4yIFhKij804bTl3kk63kqt7mCEdzbynM2VvSRzXC21/NxnycfEaAafmwjXCnzpIrWiWIDK5aFUCw10pwpRTq+ohikmaANEXTngoVqnlMEDYgK04zzuwCISmuo9SSf3O/s8QVqFYe9UYNdebl1GYmLAVcawVxQT6WPjpMaxEoK0+okX4JrY3bxlPQoDrc1lWd4svmHthRR8avRsx0Bq2P3H3EHes8wu5mrQdK2nnOArjqHHiK9AKr09vD2ShA==",
+      "convertedFrom": "telethon",
+      "sourceFile": "clones/sessions/+66996374604.session",
+      "dcId": 5,
+      "server": "91.108.56.130:443",
+      "enabled": true,
+      "userId": "7631703258",
+      "username": "hjgg89880",
+      "firstName": "fc"
+    }
+  ]
+}

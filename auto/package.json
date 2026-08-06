@@ -1,0 +1,47 @@
+{
+  "name": "telegramtt",
+  "version": "1.0.0",
+  "description": "Telegram clone seeding system with Workflow + Queue + Go-like error handling",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "worker": "tsx src/index.ts worker",
+    "scheduler": "tsx src/index.ts scheduler",
+    "scheduler:one": "tsx src/index.ts scheduler",
+    "run:once": "tsx src/index.ts once",
+    "config:preview": "tsx src/scripts/previewConfig.ts",
+    "list:chats": "tsx src/scripts/listChats.ts",
+    "login": "tsx src/scripts/loginClone.ts",
+    "import:session": "tsx src/scripts/importSession.ts",
+    "convert:telethon": "tsx src/scripts/convertTelethon.ts",
+    "build:sessions": "tsx src/scripts/buildSessionsManifest.ts",
+    "filter:sessions": "tsx src/scripts/filterDeadSessions.ts",
+    "join:group": "tsx src/scripts/joinGroups.ts",
+    "check:groups": "tsx src/scripts/checkGroupMembership.ts",
+    "prepare:run": "tsx src/scripts/prepareRun.ts",
+    "sync:manifest": "tsx src/scripts/syncManifestToConfig.ts",
+    "test:session": "tsx src/scripts/testSession.ts",
+    "test:setup": "tsx src/scripts/testSetup.ts",
+    "admin": "tsx src/adminEntry.ts",
+    "seed:bcr": "tsx src/scripts/seedBcrTemplates.ts",
+    "seed:qa": "tsx src/scripts/seedBcrQa.ts",
+    "refresh:bcr-text": "tsx src/scripts/refreshBcrText.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "bullmq": "^5.34.8",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.2",
+    "telegram": "^2.26.16"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

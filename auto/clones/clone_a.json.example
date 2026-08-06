@@ -1,0 +1,12 @@
+{
+  "session": "1AgAOMTQ5LjE1NC4xNjcuNTE...",
+  "phone": "+84901234567",
+  "label": "Clone A",
+  "proxy": {
+    "type": "socks5",
+    "host": "127.0.0.1",
+    "port": 1080,
+    "username": "",
+    "password": ""
+  }
+}

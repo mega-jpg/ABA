@@ -1,0 +1,72 @@
+{
+  "updatedAt": "2026-07-07T08:26:21.646Z",
+  "total": 11,
+  "sessions": [
+    {
+      "id": "84326098841",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:14.750Z",
+      "sourceFile": "clones/sessions/84326098841.session"
+    },
+    {
+      "id": "84865599373",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:14.751Z",
+      "sourceFile": "clones/sessions/84865599373.session"
+    },
+    {
+      "id": "84865907874",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:14.751Z",
+      "sourceFile": "clones/sessions/84865907874.session"
+    },
+    {
+      "id": "84866359463",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:17.285Z",
+      "sourceFile": "clones/sessions/84866359463.session"
+    },
+    {
+      "id": "84867425299",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:17.285Z",
+      "sourceFile": "clones/sessions/84867425299.session"
+    },
+    {
+      "id": "84867457176",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:17.285Z",
+      "sourceFile": "clones/sessions/84867457176.session"
+    },
+    {
+      "id": "84867564896",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:19.490Z",
+      "sourceFile": "clones/sessions/84867564896.session"
+    },
+    {
+      "id": "84867868405",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:19.490Z",
+      "sourceFile": "clones/sessions/84867868405.session"
+    },
+    {
+      "id": "84868225982",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:19.490Z",
+      "sourceFile": "clones/sessions/84868225982.session"
+    },
+    {
+      "id": "84868297269",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:21.646Z",
+      "sourceFile": "clones/sessions/84868297269.session"
+    },
+    {
+      "id": "84869920521",
+      "reason": "ERROR: 406: AUTH_KEY_DUPLICATED (caused by InvokeWithLayer)",
+      "checkedAt": "2026-07-07T08:26:21.646Z",
+      "sourceFile": "clones/sessions/84869920521.session"
+    }
+  ]
+}

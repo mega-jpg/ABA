@@ -1,0 +1,16 @@
+{
+  "2026-03-13": {
+    "that": {
+      "dailyNet": 0,
+      "winCount": 4,
+      "loseCount": 9,
+      "hoaCount": 1
+    },
+    "ao": {
+      "dailyNet": 0,
+      "winCount": 12,
+      "loseCount": 1,
+      "hoaCount": 1
+    }
+  }
+}

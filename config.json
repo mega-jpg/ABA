@@ -1,0 +1,166 @@
+{
+  "app": {
+    "port": 3100
+  },
+  "telegram": {
+    "apiId": 37391813,
+    "apiHash": "ff4cbe4dee1ab511214e793c7cb3fa3b",
+    "phoneNumber": "+84 905901855",
+    "password": "@ron99vn",
+    "sessionString": "1BQANOTEuMTA4LjU2LjE5OAG7qcJkB6/BIoAp5p2OeqdwYIcji8EoUycqXTnudVaEQH21vmJQaaXUacXluD4veg92E694Og+1xjySnFnULJZ47HOnBxqlR77FU1xVuFqj1/kidrmozMzAV6alKxlVbOuAOsQda619tjRWPqlR2mFSyElD3YNJi35UMnsxo9HH8gZUZATa/PVYJt9r+DOBFaEHPj6vPNbKpL5tVZ49emyMBx80aKD81VLsqvRTfDhmac5qpAqPBZc66mm+uief201uJLiy9wgMl0DJwDGh03c+5z3W5yPkKVVnliHG8mn3n52GfY7EhvATaqu2xuzF4355Olpg8L0THRrL40tcoTOxcg="
+  },
+  "messaging": {
+    "min_message_gap_seconds": 10,
+    "min_message_gap_seconds_trong_ca_ao": 2,
+    "delay_giua_du_doan_va_ket_qua_ao": 7
+  },
+  "groups": {
+    "gui_lenh_group_ao": false,
+    "chi_gui_nhom_ao": false,
+    "that": {
+      "ids": [
+        "-1004400184653"
+      ],
+      "so_tay": [
+        1
+      ]
+    },
+    "ao": {
+      "ids": [],
+      "so_tay": [
+        1
+      ]
+    }
+    
+  },
+  "gui_tin_nhan_vao_group_bao_ban": "",
+  "session": {
+    "so_ca": 12,
+    "session_ca_override": 0,
+    "tong_ket_amount_text": "+10.000",
+    "tong_ket_media_path": "tongket.jpg",
+    "dang_ky_link": "https://gk881.sbs/?f=2006890",
+    "tong_ket_link_nhom_nhan_ban": "",
+    "tong_ket_link_tai_day": "",
+    "tongKetDisplay": {
+      "ao": "percent",
+      "that": "percent",
+      "percentPerHand": 5
+    }
+  },
+  "aoSimulation": {
+    "ty_le_thang_ao": 0.80
+  },
+  "googleSheets": {
+    "id": "1fReIhw_D38UXtGS1FCkWB7aEXpkR7CrIS3PP_2rKh64",
+    "serviceAccountPath": "sheet-bot.json",
+    "tabThat": "Thật",
+    "tabAo": "Ảo",
+    "firstDataRow": 3
+  },
+  "site": {
+    "url": "https://www.78winl.xyz/login",
+    "username": "fgagasdaddad",
+    "password": "WEc57CMVGgngK2b"
+  },
+  "gameBet": {
+    "that": {
+      "betAmount": 500,
+      "bankerOdds": 0.95,
+      "playerOdds": 1
+    },
+    "ao": {
+      "betAmount": 500,
+      "bankerOdds": 0.95,
+      "playerOdds": 1
+    }
+  },
+  "forwardLinks": {
+    "tin_nhan_lich_ca": {
+      "default": ""
+    },
+    "tin_nhan_bat_dau": {
+      "default": "https://t.me/ABA_CONTENT/10",
+      "ao": "https://t.me/ABA_CONTENT/10"
+    },
+    "tin_nhan_len_ca": [],
+    "tin_nhan_vao_sanh": {
+      "default": "https://t.me/ABA_CONTENT/6",
+      "ao": "https://t.me/ABA_CONTENT/6"
+    },
+    "tin_nhan_cho_lenh": {
+      "default": "https://t.me/ABA_CONTENT/7",
+      "ao": "https://t.me/ABA_CONTENT/7"
+    },
+    "tin_nhan_ket_thuc_ca": {
+      "default": "https://t.me/ABA_CONTENT/9",
+      "ao": "https://t.me/ABA_CONTENT/9"
+    },
+    "tin_nhan_ket_thuc_ca_ao": {
+      "default": "https://t.me/ABA_CONTENT/9",
+      "ao_1": "https://t.me/ABA_CONTENT/9"
+    },
+    "tin_nhan_bao_ban": {
+      "default": "https://t.me/ABA_CONTENT/22",
+      "ao": "https://t.me/ABA_CONTENT/22"
+    },
+    "tin_nhan_tong_ket": {
+      "default": "https://t.me/ABA_CONTENT/20",
+      "ao": "https://t.me/ABA_CONTENT/20"
+    },
+    "lenh_ket_thuc_win": {
+      "default": "https://t.me/ABA_CONTENT/16",
+      "ao": "https://t.me/ABA_CONTENT/16"
+    },
+    "lenh_ket_thuc_win_2": {  
+      "default": "",
+      "ao": ""
+    },
+    "lenh_ket_thuc_win_3": {
+      "default": "",
+      "ao": "", 
+      "ao_1": "",
+      "ao_2": ""
+    },
+    "lenh_ket_thuc_lose": {
+      "default": "https://t.me/ABA_CONTENT/17",
+      "ao": "https://t.me/ABA_CONTENT/17"
+    },
+    "lenh_ket_thuc_lose_2": {
+      "default": "",
+      "ao": ""
+    },
+    "lenh_ket_thuc_lose_3": {
+      "default": "",
+      "ao": "",
+      "ao_1": "",
+      "ao_2": ""
+    },
+    "lenh_ket_thuc_draw": {
+      "default": "https://t.me/ABA_CONTENT/21",
+      "ao": ""
+    },
+    "lenh_ket_thuc_draw_2": {
+      "default": "",
+      "ao": ""
+    },
+    "du_doan_cai": {
+      "default": "https://t.me/ABA_CONTENT/13",
+      "ao": "https://t.me/ABA_CONTENT/13"
+    },
+    "du_doan_con": {
+      "default": "https://t.me/ABA_CONTENT/12",
+      "ao": "https://t.me/ABA_CONTENT/12"
+    },
+    "tin_nhan_phu": {
+      "default": [],
+      "ao": []
+    }
+  },
+  "captionBaoBan": [
+    "🆘 <b>ĐÃ BÁO BÀN</b> 🆘",
+    "➡️ <b><a href=\"https://t.me/joinchat/CSBMZT4lob03OTQ9\">ẤN VÀO ĐÂY ĐỂ THAM GIA NHÓM BÁO BÀN</a> ✔️</b>",
+    "‼️ <b>AI CHƯA CÓ BÀN LIÊN HỆ AD ĐỂ ĐƯỢC THAM GIA CÙNG NHÓM</b>",
+    "☎️ <b>BOSS : <a href=\"https://t.me/KUNDZAI1998\">𝐊𝐔𝐍 𝐃𝐙𝐀𝐈 ( CHÍNH CHỦ )</a></b>"
+  ]
+}

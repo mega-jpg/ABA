@@ -1,0 +1,162 @@
+{
+  "app": {
+    "port": 3116
+  },
+  "telegram": {
+    "apiId": 36621175,
+    "apiHash": "51ddedcaadda3eff81dd84604edfcd5f",
+    "phoneNumber": "+84792542913",
+    "password": "tele0212",
+    "sessionString": "1BQANOTEuMTA4LjU2LjE5OAG7MeovxP/AXysCza63WIkGZaYO8Hqyqv+g229awOg2vMHW7TmgxwzhfGL5R2NvldlG1qX2TChuRVKCKgCxies0Ly/0iZ426igut4PUNqwisl62UR260ujMWuJU35QmL6CLmjLbytpd1vUL8Z4LOBefkMNLJoQSrinmIVe+40RCuKV3MnpwodBLEvjiL+ddcfOTEo4Pme0hwKrA9wvODrkGBy4kCx0GRm5yV736Jjwf/CFwyTtFMPk1u/Y9qIJhZqe01RVzULuP4KwDW+sezMFZhOY6FCd9nzhOWGwy8QbQf0qY4tkQ9eSjrQgifxyq9awPxUYR0jtNyTKgcV9WmfuwJQ=="
+  },
+  "messaging": {
+    "min_message_gap_seconds": 10,
+    "min_message_gap_seconds_trong_ca_ao": 2,
+    "delay_giua_du_doan_va_ket_qua_ao": 7
+  },
+  "groups": {
+    "gui_lenh_group_ao": false,
+    "chi_gui_nhom_ao": true,
+    "that": {
+      "ids": [],
+      "so_tay": [1]
+    },
+    "ao": {
+      "ids": ["-1002814531733"],
+      "so_tay": [1]
+    }
+  },
+  "session": {
+    "so_ca": 28,
+    "session_ca_override": 0,
+    "tong_ket_amount_text": "+10.000",
+    "tong_ket_media_path": "tongket.mp4",
+    "dang_ky_link": "https://gk881.sbs/?f=2006890",
+    "tong_ket_link_nhom_nhan_ban": "",
+    "tong_ket_link_tai_day": "",
+    "tongKetDisplay": {
+      "ao": "percent",
+      "that": "bet",
+      "percentPerHand": 5
+    }
+  },
+  "aoSimulation": {
+    "ty_le_thang_ao": 0.85
+  },
+  "googleSheets": {
+    "id": "1-G2H-ITz5OZ1Q9um3ZtEk5-ziHptAnonHkOdAOIYY0w",
+    "serviceAccountPath": "sheet-bot.json",
+    "tabThat": "Thật",
+    "tabAo": "Ảo",
+    "firstDataRow": 3
+  },
+  "site": {
+    "url": "https://www.78winl.xyz/login",
+    "username": "minhbao123ac",
+    "password": "mplpro101"
+  },
+  "gameBet": {
+    "that": {
+      "betAmount": 500,
+      "bankerOdds": 0.95,
+      "playerOdds": 1
+    },
+    "ao": {
+      "betAmount": 500,
+      "bankerOdds": 0.95,
+      "playerOdds": 1
+    }
+  },
+  "forwardLinks": {
+    "tin_nhan_lich_ca": {
+      "default": ""
+    },
+    "tin_nhan_bat_dau": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/889"
+    },
+    "tin_nhan_len_ca": [],
+    "tin_nhan_vao_sanh": {
+      "default": "",
+      "ao": ""
+    },
+    "tin_nhan_cho_lenh": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/892"
+    },
+    "tin_nhan_ket_thuc_ca": {
+      "default": "",
+      "ao": ""
+    },
+    "tin_nhan_ket_thuc_ca_ao": {
+      "default": "",
+      "ao": ""
+    },
+    "tin_nhan_ket_thuc_ca_2": {
+      "default": "",
+      "ao": ""
+    },
+    "tin_nhan_ket_thuc_ca_2_ao": {
+      "default": "",
+      "ao": ""
+    },
+    "tin_nhan_bao_ban": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/891"
+    },
+    "tin_nhan_tong_ket": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/899"
+    },
+    "lenh_ket_thuc_win": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/884"
+    },
+    "lenh_ket_thuc_win_2": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/896"
+    },
+    "lenh_ket_thuc_win_3": {
+      "default": "",
+      "ao": ""
+    },
+    "lenh_ket_thuc_lose": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/885"
+    },
+    "lenh_ket_thuc_lose_2": {
+      "default": "",
+      "ao": ""
+    },
+    "lenh_ket_thuc_lose_3": {
+      "default": "",
+      "ao": ""
+    },
+    "lenh_ket_thuc_draw": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/883"
+    },
+    "lenh_ket_thuc_draw_2": {
+      "default": "",
+      "ao": ""
+    },
+    "du_doan_cai": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/881"
+    },
+    "du_doan_con": {
+      "default": "",
+      "ao": "https://t.me/tnkhuc/882"
+    },
+    "tin_nhan_phu": {
+      "default": [],
+      "ao": ["https://t.me/tnkhuc/897"]
+    }
+  },
+  "captionBaoBan": [
+    "🆘 <b>ĐÃ BÁO BÀN</b> 🆘",
+    "➡️ <b><a href=\"https://t.me/joinchat/CSBMZT4lob03OTQ9\">ẤN VÀO ĐÂY ĐỂ THAM GIA NHÓM BÁO BÀN</a> ✔️</b>",
+    "‼️ <b>AI CHƯA CÓ BÀN LIÊN HỆ AD ĐỂ ĐƯỢC THAM GIA CÙNG NHÓM</b>",
+    "☎️ <b>BOSS : <a href=\"https://t.me/KUNDZAI1998\">𝐊𝐔𝐍 𝐃𝐙𝐀𝐈 ( CHÍNH CHỦ )</a></b>"
+  ]
+}
