@@ -22,13 +22,13 @@
         "-1004400184653"
       ],
       "so_tay": [
-        1
+        3
       ]
     },
     "ao": {
       "ids": [],
       "so_tay": [
-        1
+        3
       ]
     }
     
@@ -45,7 +45,7 @@
     "tongKetDisplay": {
       "ao": "percent",
       "that": "percent",
-      "percentPerHand": 5
+      "percentPerHand": 2
     }
   },
   "aoSimulation": {
