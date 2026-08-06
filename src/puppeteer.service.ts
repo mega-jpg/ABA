@@ -2405,7 +2405,6 @@ export class PuppeteerService {
     profit: number;
     gameResult: GameResult;
     resultImagePath: string;
-    caption: string;
   }> {
     const { isDrawResult, isWin } = cheat;
     const amountText = this.calculateAmount(
@@ -2453,11 +2452,6 @@ export class PuppeteerService {
       profit,
       gameResult,
       resultImagePath,
-      caption: this.buildKetQuaPhotoCaption(
-        gameResult,
-        profit,
-        true,
-      ),
     };
   }
 
@@ -2465,7 +2459,6 @@ export class PuppeteerService {
     groupId: string,
     handIndex: number,
     resultImagePath: string,
-    caption: string,
     priorSessionPercent: number,
     profit: number,
     gameResult: GameResult,
@@ -2477,18 +2470,29 @@ export class PuppeteerService {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
 
     try {
-      const cumulativePercent = priorSessionPercent + profit;
-      const finalCaption = this.buildKetQuaPhotoCaption(
-        gameResult,
-        cumulativePercent,
-        true,
-      );
-      await this.sendPhotoToSingleGroupAo(
-        groupId,
-        resultImagePath,
-        finalCaption,
-        true,
-      );
+      const aoIdx = this.getAoGroupIndex(groupId);
+      const lenhLink = this.getLenhKetThucMessageLink(gameResult, '', true, aoIdx);
+      if (lenhLink) {
+        await this.sendEditedPhotoCaptionFromLinkToSingleGroupAo(
+          groupId,
+          lenhLink,
+          resultImagePath,
+          true,
+        );
+      } else {
+        const cumulativePercent = priorSessionPercent + profit;
+        const finalCaption = this.buildKetQuaPhotoCaption(
+          gameResult,
+          cumulativePercent,
+          true,
+        );
+        await this.sendPhotoToSingleGroupAo(
+          groupId,
+          resultImagePath,
+          finalCaption,
+          true,
+        );
+      }
     } catch (e) {
       this.logger.error(`❌ Lỗi gửi ảnh kết quả nhóm ${groupId}:`, e);
     } finally {
@@ -2532,7 +2536,6 @@ export class PuppeteerService {
       groupId,
       handIndex,
       captured.resultImagePath,
-      captured.caption,
       priorSessionPercent,
       captured.profit,
       captured.gameResult,
@@ -2876,13 +2879,24 @@ export class PuppeteerService {
     await this.screenshotLock;
 
     try {
-      const cumulativePercent = priorSessionPercent + profitPercent;
-      const caption = this.buildKetQuaPhotoCaption(
-        gameResult,
-        cumulativePercent,
-        false,
-      );
-      await this.telegramService.sendPhoto(groupId, resultImagePath, caption);
+      const thatIdx = this.getThatGroupIndex(groupId);
+      const lenhLink = this.getLenhKetThucMessageLink(gameResult, '', false, thatIdx);
+      if (lenhLink) {
+        await this.telegramService.sendEditedPhotoCaptionFromLink(
+          lenhLink,
+          groupId,
+          resultImagePath,
+          (t) => t,
+        );
+      } else {
+        const cumulativePercent = priorSessionPercent + profitPercent;
+        const caption = this.buildKetQuaPhotoCaption(
+          gameResult,
+          cumulativePercent,
+          false,
+        );
+        await this.telegramService.sendPhoto(groupId, resultImagePath, caption);
+      }
     } catch (e) {
       this.logger.error(`❌ Lỗi gửi ảnh kết quả nhóm thật ${groupId}:`, e);
     } finally {
