@@ -2168,60 +2168,7 @@ export class PuppeteerService {
         this.logger.log(`⚠️ Lỗi gửi Telegram vào sảnh - Bỏ qua: ${err}`);
       }
 
-      // Chụp ảnh bàn + gửi group thật (bỏ qua khi chi_gui_nhom_ao)
-      if (!isChiGuiNhomAo()) {
-        try {
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-          const tableScreenshotPath = `screenshots-table/${timestamp}.png`;
-
-          if (!fs.existsSync('screenshots-table')) {
-            fs.mkdirSync('screenshots-table', { recursive: true });
-          }
-
-          await this.captureIframeSafely(page, tableScreenshotPath, {
-            logTag: 'bàn',
-          });
-
-          this.logger.log(`📸 Đã chụp ảnh bàn: ${tableScreenshotPath}`);
-
-          if (fs.existsSync(tableScreenshotPath)) {
-            const tableCaption = `BÀN ${selectedTable.text.toUpperCase()}`;
-            let sendSuccess = false;
-            try {
-              for (const groupId of this.getGroupThatIds()) {
-                await this.telegramService
-                  .sendPhoto(groupId, tableScreenshotPath, tableCaption)
-                  .then(() => {
-                    sendSuccess = true;
-                    this.logger.log(`✅ Đã gửi ảnh bàn cho group thật ${groupId}`);
-                  })
-                  .catch((err) => {
-                    this.logger.log(
-                      `⚠️ Lỗi gửi ảnh bàn (thật ${groupId}) - Bỏ qua: ${err}`,
-                    );
-                  });
-              }
-            } catch (telegramError) {
-              this.logger.log(`⚠️ Lỗi gửi ảnh - Tiếp tục: ${telegramError}`);
-            }
-
-            if (sendSuccess) {
-              try {
-                if (fs.existsSync(tableScreenshotPath)) {
-                  fs.unlinkSync(tableScreenshotPath);
-                }
-                this.logger.log('🗑️ Đã xóa ảnh bàn sau khi gửi thành công');
-              } catch (deleteError) {
-                this.logger.error('❌ Lỗi xóa ảnh bàn:', deleteError);
-              }
-            }
-          }
-        } catch (screenshotError) {
-          this.logger.error('❌ Lỗi khi chụp ảnh bàn:', screenshotError);
-        }
-      } else {
-        this.logger.log('⏭️ chi_gui_nhom_ao: bỏ qua chụp/gửi ảnh bàn (nhóm thật)');
-      }
+      // Bỏ chụp/gửi ảnh báo bàn cho nhóm thật và nhóm ảo (sẽ có nhóm báo bàn riêng).
 
       // Báo bàn (ảo) + chờ lệnh (ảo/thật)
       this.logger.log('📤 Đang gửi báo bàn / chờ lệnh...');
