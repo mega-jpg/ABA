@@ -19,11 +19,17 @@
     "chi_gui_nhom_ao": true,
     "that": {
       "ids": [],
-      "so_tay": [1]
+      "so_tay": [
+        1
+      ]
     },
     "ao": {
-      "ids": ["-1002814531733"],
-      "so_tay": [1]
+      "ids": [
+        "-1002814531733"
+      ],
+      "so_tay": [
+        1
+      ]
     }
   },
   "session": {
@@ -37,7 +43,7 @@
     "tongKetDisplay": {
       "ao": "percent",
       "that": "bet",
-      "percentPerHand": 5
+      "percentPerHand": 2
     }
   },
   "aoSimulation": {
@@ -150,7 +156,9 @@
     },
     "tin_nhan_phu": {
       "default": [],
-      "ao": ["https://t.me/tnkhuc/897"]
+      "ao": [
+        "https://t.me/tnkhuc/897"
+      ]
     }
   },
   "captionBaoBan": [
