@@ -2,7 +2,9 @@
   "date": "2026-08-07",
   "ca": 1,
   "steps": [
-    "bat_dau_that"
+    "bat_dau_that",
+    "bao_ban_that",
+    "cho_lenh_that"
   ],
   "selectedTableName": "Baccarat C17"
 }
