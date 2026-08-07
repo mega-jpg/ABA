@@ -110,6 +110,7 @@ function normalizeConfig(raw) {
         so_tay_group_that: pick(that.so_tay, cfg.so_tay_group_that),
         gui_tin_nhan_vao_group_ao: pick(ao.ids, cfg.gui_tin_nhan_vao_group_ao),
         so_tay_group_ao: pick(ao.so_tay, cfg.so_tay_group_ao),
+        gui_tin_nhan_vao_group_bao_ban: pick(cfg.gui_tin_nhan_vao_group_bao_ban),
         so_ca: pick(session.so_ca, cfg.so_ca),
         session_ca_override: pick(session.session_ca_override, cfg.session_ca_override),
         tong_ket_amount_text: pick(session.tong_ket_amount_text, cfg.tong_ket_amount_text),
