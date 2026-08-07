@@ -860,27 +860,31 @@ class PuppeteerService {
             catch {
             }
         }
+        const RESULT_SELECTORS = ['.result_left', '.result_right', '.zone_result'];
+        let anyMatchFrame = null;
         for (const f of page.frames()) {
             try {
-                const matchedSelector = await f.evaluate((selectors) => {
-                    for (const selector of selectors) {
-                        if (document.querySelector(selector))
-                            return selector;
+                const result = await f.evaluate((resultSels, allSels) => {
+                    const hasAll = resultSels.every((s) => !!document.querySelector(s));
+                    if (hasAll)
+                        return { type: 'all', matched: resultSels[0] };
+                    for (const s of allSels) {
+                        if (document.querySelector(s))
+                            return { type: 'any', matched: s };
                     }
                     return null;
-                }, [...PuppeteerService.TABLE_READY_FRAME_SELECTORS]);
-                if (matchedSelector) {
-                    return {
-                        iframe: null,
-                        frame: f,
-                        source: `frame:${matchedSelector}`,
-                    };
+                }, [...RESULT_SELECTORS], [...PuppeteerService.TABLE_READY_FRAME_SELECTORS]);
+                if (result?.type === 'all') {
+                    return { iframe: null, frame: f, source: `frame:${result.matched}` };
+                }
+                if (result?.type === 'any' && !anyMatchFrame) {
+                    anyMatchFrame = { iframe: null, frame: f, source: `frame:${result.matched}` };
                 }
             }
             catch {
             }
         }
-        return fallback;
+        return anyMatchFrame ?? fallback;
     }
     async waitForBaccaratTableReady(page, options = {}) {
         const maxWaitMs = options.maxWaitMs ?? 90_000;
@@ -1810,7 +1814,7 @@ class PuppeteerService {
             const gameWinnerBanker = document.querySelector('.result_right');
             const gameWinnerTie = document.querySelector('.zone_result');
             if (!gameWinnerBanker || !gameWinnerPlayer || !gameWinnerTie) {
-                throw new Error('Chưa vào được bàn Baccarat');
+                return { hasResult: false };
             }
             if (gameWinnerPlayer.classList.contains('result_left--win')) {
                 return {
@@ -2201,18 +2205,35 @@ class PuppeteerService {
             lastGameResult: 'LOSE',
         }));
         this.logger.log(`🎮 Nhóm thật: ${states.map((s) => `${s.groupId}=${s.handsLeft} tay`).join(' | ')}`);
-        const frame = await this.findAoGameFrame(page);
+        let frame = await this.findAoGameFrame(page);
         const global = this.createAoGlobalTableState();
         const recentRounds = new Map();
         const finalizeTasks = [];
+        let consecutiveErrors = 0;
+        let lastLogTime = Date.now();
         while (states.some((s) => s.handsLeft > 0)) {
             let currentResult;
             try {
                 currentResult = await this.readBaccaratRoundResult(frame);
+                consecutiveErrors = 0;
             }
             catch {
+                consecutiveErrors += 1;
+                if (consecutiveErrors % 50 === 0) {
+                    this.logger.log(`⚠️ thật: ${consecutiveErrors} lỗi liên tiếp khi đọc frame — thử tìm lại frame...`);
+                    try {
+                        frame = await this.findAoGameFrame(page);
+                    }
+                    catch {
+                    }
+                }
                 await new Promise((resolve) => setTimeout(resolve, 200));
                 continue;
+            }
+            const now = Date.now();
+            if (now - lastLogTime >= 30_000) {
+                this.logger.log(`🔄 thật poll: tableReady=${global.tableReady} roundSeq=${global.roundSeq} hands=${states.map((s) => `${s.groupId}:${s.handsLeft}`).join(',')}`);
+                lastLogTime = now;
             }
             await this.ingestAoPollResult(global, recentRounds, currentResult);
             if (global.tableReady) {
@@ -2260,19 +2281,36 @@ class PuppeteerService {
             lastGameResult: 'LOSE',
         }));
         this.logger.log(`🎮 Nhóm ảo: ${states.map((s) => `${s.groupId}=${s.handsLeft} tay (chờ ván → hô ${Math.round(this.getAoWinRate() * 100)}%)`).join(' | ')}`);
-        const frame = await this.findAoGameFrame(page);
+        let frame = await this.findAoGameFrame(page);
         const global = this.createAoGlobalTableState();
         const recentRounds = new Map();
         const finalizeTasks = [];
         const photoTasks = [];
+        let consecutiveErrors = 0;
+        let lastLogTime = Date.now();
         while (states.some((s) => s.handsLeft > 0)) {
             let currentResult;
             try {
                 currentResult = await this.readBaccaratRoundResult(frame);
+                consecutiveErrors = 0;
             }
             catch {
+                consecutiveErrors += 1;
+                if (consecutiveErrors % 50 === 0) {
+                    this.logger.log(`⚠️ ảo: ${consecutiveErrors} lỗi liên tiếp khi đọc frame — thử tìm lại frame...`);
+                    try {
+                        frame = await this.findAoGameFrame(page);
+                    }
+                    catch {
+                    }
+                }
                 await new Promise((resolve) => setTimeout(resolve, 200));
                 continue;
+            }
+            const now = Date.now();
+            if (now - lastLogTime >= 30_000) {
+                this.logger.log(`🔄 ảo poll: tableReady=${global.tableReady} roundSeq=${global.roundSeq} hands=${states.map((s) => `${s.groupId}:${s.handsLeft}`).join(',')}`);
+                lastLogTime = now;
             }
             await this.ingestAoPollResult(global, recentRounds, currentResult);
             if (global.tableReady) {
