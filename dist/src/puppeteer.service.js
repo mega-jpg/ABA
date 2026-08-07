@@ -807,6 +807,7 @@ class PuppeteerService {
     static RESULT_CROP_TOP_PERCENT = 40;
     static RESULT_CROP_BOTTOM_PERCENT = 30;
     async findGameIframe(page) {
+        let fallback = null;
         for (const f of page.frames()) {
             try {
                 const found = await f.$('#iframeGameFullPage');
@@ -817,11 +818,14 @@ class PuppeteerService {
                 if (inner) {
                     return { iframe: handle, frame: inner };
                 }
+                if (!fallback) {
+                    fallback = { iframe: handle, frame: f };
+                }
             }
             catch {
             }
         }
-        return null;
+        return fallback;
     }
     async waitForBaccaratTableReady(page, options = {}) {
         const maxWaitMs = options.maxWaitMs ?? 30_000;
