@@ -1417,21 +1417,6 @@ class PuppeteerService {
             const baccaratMaxWait = 30000;
             const baccaratCheckInterval = 2000;
             let baccaratElements = [];
-<<<<<<< HEAD
-            for (let elapsed = 0; elapsed < baccaratMaxWait; elapsed += baccaratCheckInterval) {
-                baccaratElements = await frame.evaluate(() => {
-                    const spans = document.querySelectorAll('span');
-                    const baccaratSpans = Array.from(spans).filter((span) => span.textContent &&
-                        span.textContent.toLowerCase().includes('baccarat'));
-                    return baccaratSpans.slice(0, 5).map((span, index) => ({
-                        index: index + 1,
-                        text: span.textContent?.trim() || '',
-                    }));
-                });
-                if (baccaratElements.length > 0)
-                    break;
-                this.logger.log(`⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms)`);
-=======
             const searchBaccaratInFrames = async () => {
                 const framesToSearch = [frame, ...page.frames().filter((f) => f !== frame)];
                 for (const f of framesToSearch) {
@@ -1476,7 +1461,6 @@ class PuppeteerService {
                 catch {
                     this.logger.log(`⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms)`);
                 }
->>>>>>> d7015d0072b60e585e24f844bba54b0dae12b1e1
                 await new Promise((resolve) => setTimeout(resolve, baccaratCheckInterval));
             }
             if (baccaratElements.length === 0) {
