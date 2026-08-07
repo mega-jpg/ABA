@@ -2211,6 +2211,7 @@ class PuppeteerService {
         const finalizeTasks = [];
         let consecutiveErrors = 0;
         let lastLogTime = Date.now();
+        let tableReadyWatchdogTime = Date.now();
         while (states.some((s) => s.handsLeft > 0)) {
             let currentResult;
             try {
@@ -2232,8 +2233,17 @@ class PuppeteerService {
             }
             const now = Date.now();
             if (now - lastLogTime >= 30_000) {
-                this.logger.log(`🔄 thật poll: tableReady=${global.tableReady} roundSeq=${global.roundSeq} hands=${states.map((s) => `${s.groupId}:${s.handsLeft}`).join(',')}`);
+                this.logger.log(`🔄 thật poll: tableReady=${global.tableReady} roundSeq=${global.roundSeq} hasResult=${currentResult.hasResult} hands=${states.map((s) => `${s.groupId}:${s.handsLeft}`).join(',')}`);
                 lastLogTime = now;
+            }
+            if (!global.tableReady && now - tableReadyWatchdogTime >= 180_000) {
+                this.logger.log(`⚠️ thật: tableReady=false quá 3 phút — thử tìm lại frame game...`);
+                try {
+                    frame = await this.findAoGameFrame(page);
+                }
+                catch {
+                }
+                tableReadyWatchdogTime = now;
             }
             await this.ingestAoPollResult(global, recentRounds, currentResult);
             if (global.tableReady) {
@@ -2288,6 +2298,7 @@ class PuppeteerService {
         const photoTasks = [];
         let consecutiveErrors = 0;
         let lastLogTime = Date.now();
+        let tableReadyWatchdogTime = Date.now();
         while (states.some((s) => s.handsLeft > 0)) {
             let currentResult;
             try {
@@ -2309,8 +2320,17 @@ class PuppeteerService {
             }
             const now = Date.now();
             if (now - lastLogTime >= 30_000) {
-                this.logger.log(`🔄 ảo poll: tableReady=${global.tableReady} roundSeq=${global.roundSeq} hands=${states.map((s) => `${s.groupId}:${s.handsLeft}`).join(',')}`);
+                this.logger.log(`🔄 ảo poll: tableReady=${global.tableReady} roundSeq=${global.roundSeq} hasResult=${currentResult.hasResult} hands=${states.map((s) => `${s.groupId}:${s.handsLeft}`).join(',')}`);
                 lastLogTime = now;
+            }
+            if (!global.tableReady && now - tableReadyWatchdogTime >= 180_000) {
+                this.logger.log(`⚠️ ảo: tableReady=false quá 3 phút — thử tìm lại frame game...`);
+                try {
+                    frame = await this.findAoGameFrame(page);
+                }
+                catch {
+                }
+                tableReadyWatchdogTime = now;
             }
             await this.ingestAoPollResult(global, recentRounds, currentResult);
             if (global.tableReady) {
