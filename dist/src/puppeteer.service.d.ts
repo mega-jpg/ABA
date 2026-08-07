@@ -56,6 +56,7 @@ export declare class PuppeteerService {
     private static readonly RESULT_CROP_TOP_PERCENT;
     private static readonly RESULT_CROP_BOTTOM_PERCENT;
     private static readonly SCREENSHOT_TARGET_SELECTORS;
+    private static readonly TABLE_READY_FRAME_SELECTORS;
     private findGameIframe;
     private waitForBaccaratTableReady;
     private resolveScreenshotTarget;
