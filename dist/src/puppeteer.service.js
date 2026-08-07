@@ -739,18 +739,18 @@ class PuppeteerService {
             const newPage = await newPagePromise;
             try {
                 await newPage.setViewport({
-                    width: 375,
-                    height: 812,
-                    deviceScaleFactor: 3,
-                    isMobile: true,
-                    hasTouch: true,
-                    isLandscape: false,
+                    width: 1920,
+                    height: 1080,
+                    deviceScaleFactor: 1,
+                    isMobile: false,
+                    hasTouch: false,
+                    isLandscape: true,
                 });
-                await newPage.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1');
-                this.logger.log('📱 Đã set viewport mobile cho page SexyBaccarat');
+                await newPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36');
+                this.logger.log('🖥️ Đã set viewport PC cho page SexyBaccarat');
             }
             catch (viewportError) {
-                this.logger.error('⚠️ Không set được viewport mobile:', viewportError);
+                this.logger.error('⚠️ Không set được viewport PC:', viewportError);
             }
             await new Promise((resolve) => setTimeout(resolve, 2000));
             const finalUrl = newPage.url();
@@ -868,7 +868,7 @@ class PuppeteerService {
                 if (!found) {
                     throw new Error('Không tìm thấy iframe #iframeGameFullPage');
                 }
-                const { iframe, frame } = found;
+                const { frame } = found;
                 await page
                     .evaluate(() => {
                     const el = document.querySelector('#iframeGameFullPage');
@@ -908,8 +908,19 @@ class PuppeteerService {
                     .catch(() => undefined);
                 const delay = 300 + attempt * 400;
                 await new Promise((resolve) => setTimeout(resolve, delay));
-                const rawBuffer = (await iframe.screenshot({
+                const bbox = await page.evaluate(() => {
+                    const el = document.querySelector('#iframeGameFullPage');
+                    if (!el)
+                        return null;
+                    const rect = el.getBoundingClientRect();
+                    return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+                });
+                if (!bbox || bbox.width <= 0 || bbox.height <= 0) {
+                    throw new Error('Không lấy được bounding box của #iframeGameFullPage');
+                }
+                const rawBuffer = (await page.screenshot({
                     type: 'png',
+                    clip: { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height },
                     captureBeyondViewport: false,
                 }));
                 await page
@@ -1372,7 +1383,13 @@ class PuppeteerService {
                     if (iframe)
                         break;
                     if (!iframe && allIframes.length > 0) {
-                        this.logger.log('⚠️ Không tìm thấy #iframeGameHall, thử dùng iframe đầu tiên...');
+                        try {
+                            const fallbackSrc = await page.evaluate((el) => el.src || el.id || '(no src/id)', allIframes[0]);
+                            this.logger.log(`⚠️ Không tìm thấy #iframeGameHall, thử dùng iframe đầu tiên (src/id: ${fallbackSrc})...`);
+                        }
+                        catch {
+                            this.logger.log('⚠️ Không tìm thấy #iframeGameHall, thử dùng iframe đầu tiên...');
+                        }
                         iframe =
                             allIframes[0];
                     }
@@ -1393,13 +1410,14 @@ class PuppeteerService {
                 this.logger.error(`❌ Page content length: ${pageContent.length} characters`);
                 throw new Error('Không tìm thấy iframe iframeGameHall sau 60 giây.');
             }
-            const frame = await iframe.contentFrame();
+            let frame = await iframe.contentFrame();
             if (!frame) {
                 throw new Error('Không thể truy cập vào iframe');
             }
             const baccaratMaxWait = 30000;
             const baccaratCheckInterval = 2000;
             let baccaratElements = [];
+<<<<<<< HEAD
             for (let elapsed = 0; elapsed < baccaratMaxWait; elapsed += baccaratCheckInterval) {
                 baccaratElements = await frame.evaluate(() => {
                     const spans = document.querySelectorAll('span');
@@ -1413,9 +1431,61 @@ class PuppeteerService {
                 if (baccaratElements.length > 0)
                     break;
                 this.logger.log(`⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms)`);
+=======
+            const searchBaccaratInFrames = async () => {
+                const framesToSearch = [frame, ...page.frames().filter((f) => f !== frame)];
+                for (const f of framesToSearch) {
+                    try {
+                        const elements = await f.evaluate(() => {
+                            const spans = document.querySelectorAll('span');
+                            const baccaratSpans = Array.from(spans).filter((span) => span.textContent &&
+                                span.textContent.toLowerCase().includes('baccarat'));
+                            return baccaratSpans.slice(0, 5).map((span, index) => ({
+                                index: index + 1,
+                                text: span.textContent?.trim() || '',
+                            }));
+                        });
+                        if (elements.length > 0) {
+                            return { elements, foundFrame: f };
+                        }
+                    }
+                    catch {
+                    }
+                }
+                return null;
+            };
+            for (let elapsed = 0; elapsed < baccaratMaxWait; elapsed += baccaratCheckInterval) {
+                const result = await searchBaccaratInFrames();
+                if (result) {
+                    baccaratElements = result.elements;
+                    if (result.foundFrame !== frame) {
+                        this.logger.log(`🔄 Tìm thấy bàn baccarat trong frame khác: ${result.foundFrame.url() || '(about:blank)'}`);
+                        frame = result.foundFrame;
+                    }
+                    break;
+                }
+                try {
+                    const frameInfo = await frame.evaluate(() => ({
+                        url: document.location.href,
+                        readyState: document.readyState,
+                        bodyChildren: document.body ? document.body.children.length : 0,
+                        spanCount: document.querySelectorAll('span').length,
+                    }));
+                    this.logger.log(`⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms) | readyState=${frameInfo.readyState} spans=${frameInfo.spanCount} bodyChildren=${frameInfo.bodyChildren}`);
+                }
+                catch {
+                    this.logger.log(`⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms)`);
+                }
+>>>>>>> d7015d0072b60e585e24f844bba54b0dae12b1e1
                 await new Promise((resolve) => setTimeout(resolve, baccaratCheckInterval));
             }
             if (baccaratElements.length === 0) {
+                try {
+                    const allFrameUrls = page.frames().map((f) => f.url() || '(about:blank)');
+                    this.logger.error(`❌ Tất cả frames hiện có (${allFrameUrls.length}): ${JSON.stringify(allFrameUrls)}`);
+                }
+                catch {
+                }
                 throw new Error('Không tìm thấy bàn baccarat nào');
             }
             const ca = this.currentSessionCa;
