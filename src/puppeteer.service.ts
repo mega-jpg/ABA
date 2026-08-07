@@ -2479,10 +2479,10 @@ export class PuppeteerService {
           }
           if (!isChiGuiNhomAo() && hasVaoSanhThat) {
             await this.forwardMessageToGroupThatWithProgress(
-                'vao_sanh_that',
-                'link_forward_tin_nhan_vao_sanh',
-                ca ?? null,
-                { resolvePerGroupFromConfig: true },
+              'vao_sanh_that',
+              'link_forward_tin_nhan_vao_sanh',
+              ca ?? null,
+              { resolvePerGroupFromConfig: true },
             ).catch((err) => {
               this.logger.log(
                 `⚠️ Lỗi gửi Telegram vào sảnh (thật) - Bỏ qua: ${err}`,
@@ -2521,10 +2521,10 @@ export class PuppeteerService {
           }
           if (!isChiGuiNhomAo() && hasChoLenhThat) {
             await this.forwardMessageToGroupThatWithProgress(
-                'cho_lenh_that',
-                'link_forward_tin_nhan_cho_lenh',
-                ca ?? null,
-                { resolvePerGroupFromConfig: true },
+              'cho_lenh_that',
+              'link_forward_tin_nhan_cho_lenh',
+              ca ?? null,
+              { resolvePerGroupFromConfig: true },
             ).catch((err) => {
               this.logger.log(
                 `⚠️ Lỗi gửi Telegram vào cho lenh (thật) - Bỏ qua: ${err}`,
