@@ -75,6 +75,12 @@ export declare class PuppeteerService {
     private sendMessageToSingleGroupAo;
     private sendPhotoToSingleGroupAo;
     private sendEditedPhotoCaptionFromLinkToSingleGroupAo;
+    private escapeHtml;
+    private buildBaoBanPhotoCaption;
+    private captureTableScreenshot;
+    private sendTablePhotoToSingleGroupAo;
+    private sendTablePhotoToSingleGroupThat;
+    private sendTablePhotoToConfiguredGroups;
     private forwardTongKetToSingleGroupAoWithStats;
     private forwardTongKetToSingleGroupThatWithStats;
     cleanupAllScreenshotFolders(): void;

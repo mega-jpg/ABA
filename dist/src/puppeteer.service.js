@@ -1185,6 +1185,122 @@ class PuppeteerService {
     async sendEditedPhotoCaptionFromLinkToSingleGroupAo(groupId, messageLink, photoPath, fastHand = false) {
         await this.telegramService.sendEditedPhotoCaptionFromLink(messageLink, groupId, photoPath, (text) => text, fastHand ? this.getAoHandTelegramOpts() : undefined);
     }
+    escapeHtml(text) {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+    buildBaoBanPhotoCaption() {
+        const cfg = telegram_config_1.telegramConfig;
+        const tableName = this.selectedTableName.trim();
+        const rawLines = Array.isArray(cfg.captionBaoBan) ? cfg.captionBaoBan : [];
+        const lines = rawLines
+            .map((line) => String(line ?? '').trim())
+            .filter(Boolean);
+        const parts = [];
+        if (tableName) {
+            parts.push(`🎯 <b>${this.escapeHtml(tableName)}</b>`);
+        }
+        if (lines.length > 0) {
+            parts.push(lines.join('\n'));
+        }
+        const caption = parts.join('\n').trim();
+        return caption || undefined;
+    }
+    async captureTableScreenshot(page) {
+        if (!fs.existsSync('screenshots-table')) {
+            fs.mkdirSync('screenshots-table', { recursive: true });
+        }
+        const safeTableName = this.selectedTableName
+            .trim()
+            .replace(/[^a-zA-Z0-9_-]+/g, '_')
+            .replace(/^_+|_+$/g, '') || 'baccarat-table';
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const outputPath = `screenshots-table/${safeTableName}_${timestamp}.png`;
+        this.screenshotLock = this.screenshotLock.then(async () => {
+            await this.captureIframeSafely(page, outputPath, { logTag: 'bàn' });
+        });
+        await this.screenshotLock;
+        return outputPath;
+    }
+    async sendTablePhotoToSingleGroupAo(groupId, photoPath) {
+        const aoIdx = this.getAoGroupIndex(groupId);
+        const link = this.getConfigForwardLink('link_forward_tin_nhan_bao_ban', true, aoIdx);
+        if (link) {
+            await this.sendEditedPhotoCaptionFromLinkToSingleGroupAo(groupId, link, photoPath);
+            return;
+        }
+        await this.sendPhotoToSingleGroupAo(groupId, photoPath, this.buildBaoBanPhotoCaption());
+    }
+    async sendTablePhotoToSingleGroupThat(groupId, photoPath) {
+        if ((0, telegram_config_1.isChiGuiNhomAo)())
+            return;
+        const thatIdx = this.getThatGroupIndex(groupId);
+        const link = this.getConfigForwardLinkForThat('link_forward_tin_nhan_bao_ban', thatIdx);
+        if (link) {
+            await this.telegramService.sendEditedPhotoCaptionFromLink(link, groupId, photoPath, (text) => text);
+            return;
+        }
+        await this.telegramService.sendPhoto(groupId, photoPath, this.buildBaoBanPhotoCaption());
+    }
+    async sendTablePhotoToConfiguredGroups(page, ca) {
+        const aoGroupIds = this.getGroupAoIds().map((id) => id.trim()).filter(Boolean);
+        const thatGroupIds = this.getGroupThatIds()
+            .map((id) => id.trim())
+            .filter(Boolean);
+        const skipAo = Boolean(ca && (0, session_progress_util_1.wasSessionStepDone)('bao_ban_ao', ca));
+        const skipThat = Boolean(ca && (0, session_progress_util_1.wasSessionStepDone)('bao_ban_that', ca));
+        if (skipAo) {
+            this.logger.log(`♻️ Retry ca ${ca}: bỏ qua "bao_ban_ao" (ảnh bàn đã gửi)`);
+        }
+        if (skipThat) {
+            this.logger.log(`♻️ Retry ca ${ca}: bỏ qua "bao_ban_that" (ảnh bàn đã gửi)`);
+        }
+        const shouldSendAo = aoGroupIds.length > 0 && !skipAo;
+        const shouldSendThat = !(0, telegram_config_1.isChiGuiNhomAo)() && thatGroupIds.length > 0 && !skipThat;
+        if (!shouldSendAo && !shouldSendThat) {
+            return;
+        }
+        const photoPath = await this.captureTableScreenshot(page);
+        try {
+            if (shouldSendAo) {
+                await Promise.all(aoGroupIds.map(async (groupId) => {
+                    try {
+                        await this.sendTablePhotoToSingleGroupAo(groupId, photoPath);
+                        this.logger.log(`✅ Đã gửi ảnh bàn cho group ảo ${groupId}`);
+                    }
+                    catch (error) {
+                        this.logger.error(`❌ Lỗi gửi ảnh bàn cho group ảo ${groupId}:`, error);
+                    }
+                }));
+                if (ca)
+                    (0, session_progress_util_1.markSessionStepDone)('bao_ban_ao', ca);
+            }
+            if (shouldSendThat) {
+                await Promise.all(thatGroupIds.map(async (groupId) => {
+                    try {
+                        await this.sendTablePhotoToSingleGroupThat(groupId, photoPath);
+                        this.logger.log(`✅ Đã gửi ảnh bàn cho group thật ${groupId}`);
+                    }
+                    catch (error) {
+                        this.logger.error(`❌ Lỗi gửi ảnh bàn cho group thật ${groupId}:`, error);
+                    }
+                }));
+                if (ca)
+                    (0, session_progress_util_1.markSessionStepDone)('bao_ban_that', ca);
+            }
+        }
+        finally {
+            try {
+                if (fs.existsSync(photoPath))
+                    fs.unlinkSync(photoPath);
+            }
+            catch {
+            }
+        }
+    }
     async forwardTongKetToSingleGroupAoWithStats(groupId, messageLink, mediaPath) {
         const preview = await this.telegramService.fetchMessageTextFromLink(messageLink);
         const editFn = (text) => (0, ca_profit_util_1.editTongKetCaLines)(text, 'ao', groupId);
@@ -1536,13 +1652,9 @@ class PuppeteerService {
             catch (err) {
                 this.logger.log(`⚠️ Lỗi gửi Telegram vào sảnh - Bỏ qua: ${err}`);
             }
+            await this.sendTablePhotoToConfiguredGroups(page, ca ?? null);
             this.logger.log('📤 Đang gửi báo bàn / chờ lệnh...');
             try {
-                if (this.hasAnyAoForwardLink('link_forward_tin_nhan_bao_ban')) {
-                    await this.forwardMessageToGroupAoWithProgress('bao_ban_ao', 'link_forward_tin_nhan_bao_ban', ca ?? null, { resolvePerGroupFromConfig: true }).catch((err) => {
-                        this.logger.log(`⚠️ Lỗi forward báo bàn (ảo) - Bỏ qua: ${err}`);
-                    });
-                }
                 const hasChoLenhAo = this.hasAnyAoForwardLink('link_forward_tin_nhan_cho_lenh');
                 const hasChoLenhThat = this.hasAnyThatForwardLink('link_forward_tin_nhan_cho_lenh');
                 if (hasChoLenhAo || hasChoLenhThat) {
