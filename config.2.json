@@ -18,7 +18,9 @@
     "gui_lenh_group_ao": false,
     "chi_gui_nhom_ao": true,
     "that": {
-      "ids": [],
+      "ids": [
+        
+      ],
       "so_tay": [
         1
       ]
