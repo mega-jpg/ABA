@@ -581,9 +581,8 @@ export class PuppeteerService {
       '--no-zygote',
       '--start-maximized',
       '--disable-blink-features=AutomationControlled',
-      '--disable-features=VizDisplayCompositor',
+      '--disable-features=VizDisplayCompositor,TranslateUI,BlinkGenPropertyTrees',
       '--disable-web-security',
-      '--disable-features=TranslateUI',
       '--disable-client-side-phishing-detection',
       '--disable-sync',
       '--disable-default-apps',
@@ -604,7 +603,6 @@ export class PuppeteerService {
       '--password-store=basic',
       '--use-mock-keychain',
       '--no-pings',
-      '--disable-features=TranslateUI,BlinkGenPropertyTrees',
       '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
     ];
 
@@ -1503,7 +1501,7 @@ export class PuppeteerService {
         const rawBuffer = (await page.screenshot({
           type: 'png',
           clip: { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height },
-          captureBeyondViewport: false,
+          captureBeyondViewport: true,
         })) as Buffer;
 
         // Reset willChange sau chụp
