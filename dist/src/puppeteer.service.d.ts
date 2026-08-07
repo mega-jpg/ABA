@@ -48,6 +48,7 @@ export declare class PuppeteerService {
     launchBrowser(): Promise<void>;
     openPage(url: string): Promise<puppeteer.Page>;
     closeBrowser(): Promise<void>;
+    private runWithScreenshotLock;
     login(page: puppeteer.Page, username: string, password: string): Promise<void>;
     navigateToSexyBaccarat(page: puppeteer.Page): Promise<puppeteer.Page>;
     replaceGameMessage(frame: puppeteer.Frame, isWin: boolean, amount: string): Promise<void>;

@@ -895,8 +895,22 @@ export class PuppeteerService {
       }
     } catch (error) {
       this.logger.error('❌ Lỗi khi đóng page:', error);
-      throw error;
+      this.browser = null;
     }
+  }
+
+  private async runWithScreenshotLock(task: () => Promise<void>): Promise<void> {
+    const queuedTask = this.screenshotLock
+      .catch((error) => {
+        this.logger.error('⚠️ Phục hồi hàng đợi chụp ảnh sau lỗi trước đó:', error);
+      })
+      .then(task);
+
+    this.screenshotLock = queuedTask.catch((error) => {
+      this.logger.error('❌ Lỗi hàng đợi chụp ảnh:', error);
+    });
+
+    await queuedTask;
   }
 
   async login(
@@ -1878,10 +1892,9 @@ export class PuppeteerService {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const outputPath = `screenshots-table/${safeTableName}_${timestamp}.png`;
 
-    this.screenshotLock = this.screenshotLock.then(async () => {
+    await this.runWithScreenshotLock(async () => {
       await this.captureIframeSafely(page, outputPath, { logTag: 'bàn' });
     });
-    await this.screenshotLock;
 
     return outputPath;
   }
@@ -2452,35 +2465,30 @@ export class PuppeteerService {
           'link_forward_tin_nhan_vao_sanh',
         );
         if (hasVaoSanhAo || hasVaoSanhThat) {
-          const tasks = [
-            hasVaoSanhAo
-              ? this.forwardMessageToGroupAoWithProgress(
-                  'vao_sanh_ao',
-                  'link_forward_tin_nhan_vao_sanh',
-                  ca ?? null,
-                  { resolvePerGroupFromConfig: true },
-                ).catch((err) => {
-                  this.logger.log(
-                    `⚠️ Lỗi gửi Telegram vào sảnh (ảo) - Bỏ qua: ${err}`,
-                  );
-                })
-              : Promise.resolve(),
-          ];
-          if (!isChiGuiNhomAo() && hasVaoSanhThat) {
-            tasks.push(
-              this.forwardMessageToGroupThatWithProgress(
-                'vao_sanh_that',
-                'link_forward_tin_nhan_vao_sanh',
-                ca ?? null,
-                { resolvePerGroupFromConfig: true },
-              ).catch((err) => {
-                this.logger.log(
-                  `⚠️ Lỗi gửi Telegram vào sảnh (thật) - Bỏ qua: ${err}`,
-                );
-              }),
-            );
+          if (hasVaoSanhAo) {
+            await this.forwardMessageToGroupAoWithProgress(
+              'vao_sanh_ao',
+              'link_forward_tin_nhan_vao_sanh',
+              ca ?? null,
+              { resolvePerGroupFromConfig: true },
+            ).catch((err) => {
+              this.logger.log(
+                `⚠️ Lỗi gửi Telegram vào sảnh (ảo) - Bỏ qua: ${err}`,
+              );
+            });
           }
-          await Promise.all(tasks);
+          if (!isChiGuiNhomAo() && hasVaoSanhThat) {
+            await this.forwardMessageToGroupThatWithProgress(
+              'vao_sanh_that',
+              'link_forward_tin_nhan_vao_sanh',
+              ca ?? null,
+              { resolvePerGroupFromConfig: true },
+            ).catch((err) => {
+              this.logger.log(
+                `⚠️ Lỗi gửi Telegram vào sảnh (thật) - Bỏ qua: ${err}`,
+              );
+            });
+          }
         }
       } catch (err) {
         this.logger.log(`⚠️ Lỗi gửi Telegram vào sảnh - Bỏ qua: ${err}`);
@@ -2499,35 +2507,30 @@ export class PuppeteerService {
           'link_forward_tin_nhan_cho_lenh',
         );
         if (hasChoLenhAo || hasChoLenhThat) {
-          const choLenhTasks = [
-            hasChoLenhAo
-              ? this.forwardMessageToGroupAoWithProgress(
-                  'cho_lenh_ao',
-                  'link_forward_tin_nhan_cho_lenh',
-                  ca ?? null,
-                  { resolvePerGroupFromConfig: true },
-                ).catch((err) => {
-                  this.logger.log(
-                    `⚠️ Lỗi gửi Telegram vào cho lenh (ảo) - Bỏ qua: ${err}`,
-                  );
-                })
-              : Promise.resolve(),
-          ];
-          if (!isChiGuiNhomAo() && hasChoLenhThat) {
-            choLenhTasks.push(
-              this.forwardMessageToGroupThatWithProgress(
-                'cho_lenh_that',
-                'link_forward_tin_nhan_cho_lenh',
-                ca ?? null,
-                { resolvePerGroupFromConfig: true },
-              ).catch((err) => {
-                this.logger.log(
-                  `⚠️ Lỗi gửi Telegram vào cho lenh (thật) - Bỏ qua: ${err}`,
-                );
-              }),
-            );
+          if (hasChoLenhAo) {
+            await this.forwardMessageToGroupAoWithProgress(
+              'cho_lenh_ao',
+              'link_forward_tin_nhan_cho_lenh',
+              ca ?? null,
+              { resolvePerGroupFromConfig: true },
+            ).catch((err) => {
+              this.logger.log(
+                `⚠️ Lỗi gửi Telegram vào cho lenh (ảo) - Bỏ qua: ${err}`,
+              );
+            });
           }
-          await Promise.all(choLenhTasks);
+          if (!isChiGuiNhomAo() && hasChoLenhThat) {
+            await this.forwardMessageToGroupThatWithProgress(
+              'cho_lenh_that',
+              'link_forward_tin_nhan_cho_lenh',
+              ca ?? null,
+              { resolvePerGroupFromConfig: true },
+            ).catch((err) => {
+              this.logger.log(
+                `⚠️ Lỗi gửi Telegram vào cho lenh (thật) - Bỏ qua: ${err}`,
+              );
+            });
+          }
         }
       } catch (telegramError) {
         this.logger.log('⚠️ Lỗi gửi báo bàn/chờ lệnh - Tiếp tục chạy:');
@@ -2689,7 +2692,7 @@ export class PuppeteerService {
     this.logger.log(
       `📸 Nhóm ảo ${groupId} tay ${handIndex}: thay messagebox + chụp ngay${handIndex === 3 ? ' (full màn hình)' : ''}...`,
     );
-    this.screenshotLock = this.screenshotLock.then(async () => {
+    await this.runWithScreenshotLock(async () => {
       await this.replaceGameMessage(frame, isWin || isDrawResult, amountText);
       const captureOpts =
         handIndex === 3
@@ -2701,7 +2704,6 @@ export class PuppeteerService {
             };
       await this.captureIframeSafely(page, resultImagePath, captureOpts);
     });
-    await this.screenshotLock;
 
     return {
       profit,
@@ -3119,7 +3121,7 @@ export class PuppeteerService {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const resultImagePath = `screenshots-result/that_${safeId}_t${handIndex}_${timestamp}.png`;
 
-    this.screenshotLock = this.screenshotLock.then(async () => {
+    await this.runWithScreenshotLock(async () => {
       await this.replaceGameMessage(frame, isWin || isDrawResult, amountText);
       const captureOpts =
         handIndex === 3
@@ -3131,7 +3133,6 @@ export class PuppeteerService {
             };
       await this.captureIframeSafely(page, resultImagePath, captureOpts);
     });
-    await this.screenshotLock;
 
     try {
       const thatIdx = this.getThatGroupIndex(groupId);
@@ -3610,32 +3611,30 @@ export class PuppeteerService {
           'link_forward_tin_nhan_bat_dau',
         );
         if (hasBatDauThat || hasBatDauAo) {
-          await Promise.all([
-            hasBatDauAo
-              ? this.forwardMessageToGroupAoWithProgress(
-                  'bat_dau_ao',
-                  'link_forward_tin_nhan_bat_dau',
-                  sessionCaForProgress,
-                  { resolvePerGroupFromConfig: true },
-                ).catch((err) => {
-                  this.logger.log(
-                    `⚠️ Lỗi gửi Telegram bắt đầu (group ảo) - Bỏ qua: ${err}`,
-                  );
-                })
-              : Promise.resolve(),
-            hasBatDauThat
-              ? this.forwardMessageToGroupThatWithProgress(
-                  'bat_dau_that',
-                  'link_forward_tin_nhan_bat_dau',
-                  sessionCaForProgress,
-                  { resolvePerGroupFromConfig: true },
-                ).catch((err) => {
-                  this.logger.log(
-                    `⚠️ Lỗi gửi Telegram bắt đầu (group thật) - Bỏ qua: ${err}`,
-                  );
-                })
-              : Promise.resolve(),
-          ]);
+          if (hasBatDauAo) {
+            await this.forwardMessageToGroupAoWithProgress(
+              'bat_dau_ao',
+              'link_forward_tin_nhan_bat_dau',
+              sessionCaForProgress,
+              { resolvePerGroupFromConfig: true },
+            ).catch((err) => {
+              this.logger.log(
+                `⚠️ Lỗi gửi Telegram bắt đầu (group ảo) - Bỏ qua: ${err}`,
+              );
+            });
+          }
+          if (hasBatDauThat) {
+            await this.forwardMessageToGroupThatWithProgress(
+              'bat_dau_that',
+              'link_forward_tin_nhan_bat_dau',
+              sessionCaForProgress,
+              { resolvePerGroupFromConfig: true },
+            ).catch((err) => {
+              this.logger.log(
+                `⚠️ Lỗi gửi Telegram bắt đầu (group thật) - Bỏ qua: ${err}`,
+              );
+            });
+          }
         }
 
         // Ngay sau tin bắt đầu: forward tin lệnh theo ca (index = ca - 1 trong mảng)
@@ -3690,30 +3689,28 @@ export class PuppeteerService {
                   );
                 });
             } else {
-              await Promise.all([
-                this.forwardMessageToGroupAoWithProgress(
-                  'len_ca_ao',
-                  linkLen,
-                  sessionCa,
-                ).catch((err) => {
+              await this.forwardMessageToGroupAoWithProgress(
+                'len_ca_ao',
+                linkLen,
+                sessionCa,
+              ).catch((err) => {
+                this.logger.log(
+                  `⚠️ Lỗi forward lệnh ca (group ảo) - Bỏ qua: ${err}`,
+                );
+              });
+              await this.forwardMessageToGroupThatWithProgress(
+                'len_ca_that',
+                linkLen,
+                sessionCa,
+              )
+                .then(() => {
+                  caForwardOk = true;
+                })
+                .catch((err) => {
                   this.logger.log(
-                    `⚠️ Lỗi forward lệnh ca (group ảo) - Bỏ qua: ${err}`,
+                    `⚠️ Lỗi forward lệnh ca (group thật) - Bỏ qua: ${err}`,
                   );
-                }),
-                this.forwardMessageToGroupThatWithProgress(
-                  'len_ca_that',
-                  linkLen,
-                  sessionCa,
-                )
-                  .then(() => {
-                    caForwardOk = true;
-                  })
-                  .catch((err) => {
-                    this.logger.log(
-                      `⚠️ Lỗi forward lệnh ca (group thật) - Bỏ qua: ${err}`,
-                    );
-                  }),
-              ]);
+                });
             }
             if (caForwardOk) {
               if (overrideCa > 0) {
