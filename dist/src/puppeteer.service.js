@@ -763,6 +763,15 @@ class PuppeteerService {
             catch (viewportError) {
                 this.logger.error('⚠️ Không set được viewport PC:', viewportError);
             }
+            try {
+                await newPage.waitForNavigation({
+                    waitUntil: 'networkidle2',
+                    timeout: 30000,
+                });
+            }
+            catch (navError) {
+                this.logger.log('⚠️ [5/6] Navigation timeout hoặc không cần thiết');
+            }
             await new Promise((resolve) => setTimeout(resolve, 2000));
             const finalUrl = newPage.url();
             this.logger.log('🎉 [navigateToSexyBaccarat] HOÀN THÀNH');
@@ -827,6 +836,13 @@ class PuppeteerService {
         '#iframeGameHall',
         'iframe[src*="game"]',
     ];
+    static TABLE_READY_FRAME_SELECTORS = [
+        '.result_left',
+        '.result_right',
+        '.zone_result',
+        '#gameCanvas',
+        'canvas#gameCanvas',
+    ];
     async findGameIframe(page) {
         let fallback = null;
         for (const f of page.frames()) {
@@ -837,10 +853,30 @@ class PuppeteerService {
                 const handle = found;
                 const inner = await handle.contentFrame();
                 if (inner) {
-                    return { iframe: handle, frame: inner };
+                    return { iframe: handle, frame: inner, source: '#iframeGameFullPage' };
                 }
                 if (!fallback) {
-                    fallback = { iframe: handle, frame: f };
+                    fallback = { iframe: handle, frame: f, source: '#iframeGameFullPage:fallback' };
+                }
+            }
+            catch {
+            }
+        }
+        for (const f of page.frames()) {
+            try {
+                const matchedSelector = await f.evaluate((selectors) => {
+                    for (const selector of selectors) {
+                        if (document.querySelector(selector))
+                            return selector;
+                    }
+                    return null;
+                }, [...PuppeteerService.TABLE_READY_FRAME_SELECTORS]);
+                if (matchedSelector) {
+                    return {
+                        iframe: null,
+                        frame: f,
+                        source: `frame:${matchedSelector}`,
+                    };
                 }
             }
             catch {
@@ -858,7 +894,8 @@ class PuppeteerService {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             const found = await this.findGameIframe(page);
             if (found) {
-                this.logger.log(`✅ ${tag}Đã thấy iframe — chụp gửi ngay${attempt > 0 ? ` (sau ${attempt}s)` : ''}`);
+                lastFoundFrame = found.frame;
+                this.logger.log(`✅ ${tag}Đã thấy vùng game (${found.source}) — chụp gửi ngay${attempt > 0 ? ` (sau ${attempt}s)` : ''}`);
                 return found.frame;
             }
             if (attempt > 0 && attempt % 10 === 0) {
@@ -1687,10 +1724,18 @@ class PuppeteerService {
                     baccaratSpans[index].click();
                 }
             }, tableIndex);
-            await this.waitForBaccaratTableReady(page, {
-                logTag: 'bàn',
-                maxWaitMs: 30_000,
-            });
+            try {
+                await this.waitForBaccaratTableReady(page, {
+                    logTag: 'bàn',
+                    maxWaitMs: 30_000,
+                });
+            }
+            catch (error) {
+                const screenshotTarget = await this.resolveScreenshotTarget(page);
+                if (!screenshotTarget)
+                    throw error;
+                this.logger.log(`⚠️ bàn Chưa thấy iframeGameFullPage nhưng đã có target chụp ${screenshotTarget.selector} <${screenshotTarget.tagName}> — tiếp tục gửi ảnh báo bàn`);
+            }
             this.logger.log('📤 Đang gửi tin nhắn Telegram...');
             try {
                 const hasVaoSanhAo = this.hasAnyAoForwardLink('link_forward_tin_nhan_vao_sanh');
