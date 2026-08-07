@@ -2002,9 +2002,19 @@ export class PuppeteerService {
           if (iframe) break;
 
           if (!iframe && allIframes.length > 0) {
-            this.logger.log(
-              '⚠️ Không tìm thấy #iframeGameHall, thử dùng iframe đầu tiên...',
-            );
+            try {
+              const fallbackSrc = await page.evaluate(
+                (el) => (el as HTMLIFrameElement).src || el.id || '(no src/id)',
+                allIframes[0],
+              );
+              this.logger.log(
+                `⚠️ Không tìm thấy #iframeGameHall, thử dùng iframe đầu tiên (src/id: ${fallbackSrc})...`,
+              );
+            } catch {
+              this.logger.log(
+                '⚠️ Không tìm thấy #iframeGameHall, thử dùng iframe đầu tiên...',
+              );
+            }
             iframe =
               allIframes[0] as puppeteer.ElementHandle<HTMLIFrameElement>;
           }
@@ -2034,7 +2044,7 @@ export class PuppeteerService {
       }
 
       // Chuyển vào iframe
-      const frame = await iframe.contentFrame();
+      let frame = await iframe.contentFrame();
       if (!frame) {
         throw new Error('Không thể truy cập vào iframe');
       }
@@ -2042,40 +2052,88 @@ export class PuppeteerService {
       // Bỏ chụp hình sảnh + captionBaoBan: group ảo sẽ nhận báo bàn bằng link forward.
 
       // Tìm các bàn Baccarat (thử lại tối đa 30 giây nếu chưa render kịp)
+      // Mỗi lần thử, duyệt lại tất cả frame của page để bắt được iframe load động
       const baccaratMaxWait = 30000;
       const baccaratCheckInterval = 2000;
       let baccaratElements: { index: number; text: string }[] = [];
+
+      const searchBaccaratInFrames = async (): Promise<{
+        elements: { index: number; text: string }[];
+        foundFrame: puppeteer.Frame;
+      } | null> => {
+        const framesToSearch = [frame, ...page.frames().filter((f) => f !== frame)];
+        for (const f of framesToSearch) {
+          try {
+            const elements = await f.evaluate(() => {
+              const spans = document.querySelectorAll('span');
+              const baccaratSpans = Array.from(spans).filter(
+                (span) =>
+                  span.textContent &&
+                  span.textContent.toLowerCase().includes('baccarat'),
+              );
+              return baccaratSpans.slice(0, 5).map((span, index) => ({
+                index: index + 1,
+                text: span.textContent?.trim() || '',
+              }));
+            });
+            if (elements.length > 0) {
+              return { elements, foundFrame: f };
+            }
+          } catch {
+            // frame có thể bị detach, bỏ qua
+          }
+        }
+        return null;
+      };
 
       for (
         let elapsed = 0;
         elapsed < baccaratMaxWait;
         elapsed += baccaratCheckInterval
       ) {
-        baccaratElements = await frame.evaluate(() => {
-          const spans = document.querySelectorAll('span');
-          const baccaratSpans = Array.from(spans).filter(
-            (span) =>
-              span.textContent &&
-              span.textContent.toLowerCase().includes('baccarat'),
-          );
+        const result = await searchBaccaratInFrames();
+        if (result) {
+          baccaratElements = result.elements;
+          if (result.foundFrame !== frame) {
+            this.logger.log(
+              `🔄 Tìm thấy bàn baccarat trong frame khác: ${result.foundFrame.url() || '(about:blank)'}`,
+            );
+            frame = result.foundFrame;
+          }
+          break;
+        }
 
-          return baccaratSpans.slice(0, 5).map((span, index) => ({
-            index: index + 1,
-            text: span.textContent?.trim() || '',
+        // Log debug info về frame hiện tại để dễ chẩn đoán
+        try {
+          const frameInfo = await frame.evaluate(() => ({
+            url: document.location.href,
+            readyState: document.readyState,
+            bodyChildren: document.body ? document.body.children.length : 0,
+            spanCount: document.querySelectorAll('span').length,
           }));
-        });
-
-        if (baccaratElements.length > 0) break;
-
-        this.logger.log(
-          `⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms)`,
-        );
+          this.logger.log(
+            `⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms) | readyState=${frameInfo.readyState} spans=${frameInfo.spanCount} bodyChildren=${frameInfo.bodyChildren}`,
+          );
+        } catch {
+          this.logger.log(
+            `⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms)`,
+          );
+        }
         await new Promise((resolve) =>
           setTimeout(resolve, baccaratCheckInterval),
         );
       }
 
       if (baccaratElements.length === 0) {
+        // Log thêm thông tin để dễ chẩn đoán
+        try {
+          const allFrameUrls = page.frames().map((f) => f.url() || '(about:blank)');
+          this.logger.error(
+            `❌ Tất cả frames hiện có (${allFrameUrls.length}): ${JSON.stringify(allFrameUrls)}`,
+          );
+        } catch {
+          // ignore
+        }
         throw new Error('Không tìm thấy bàn baccarat nào');
       }
 
