@@ -1084,14 +1084,14 @@ export class PuppeteerService {
       }
 
       // Đợi page load (với timeout)
-      // try {
-      //   await newPage.waitForNavigation({
-      //     waitUntil: 'networkidle2',
-      //     timeout: 30000,
-      //   });
-      // } catch (navError) {
-      //   this.logger.log('⚠️ [5/6] Navigation timeout hoặc không cần thiết');
-      // }
+       try {
+         await newPage.waitForNavigation({
+           waitUntil: 'networkidle2',
+           timeout: 30000,
+         });
+       } catch (navError) {
+         this.logger.log('⚠️ [5/6] Navigation timeout hoặc không cần thiết');
+       }
 
       // Đợi thêm để chắc chắn
       await new Promise((resolve) => setTimeout(resolve, 2000));
