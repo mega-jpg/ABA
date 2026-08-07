@@ -31,12 +31,11 @@
         3
       ]
     }
-    
   },
   "gui_tin_nhan_vao_group_bao_ban": "",
   "session": {
     "so_ca": 12,
-    "session_ca_override": 0,
+    "session_ca_override": 1,
     "tong_ket_amount_text": "+10.000",
     "tong_ket_media_path": "tongket.jpg",
     "dang_ky_link": "https://gk881.sbs/?f=2006890",
@@ -49,7 +48,7 @@
     }
   },
   "aoSimulation": {
-    "ty_le_thang_ao": 0.80
+    "ty_le_thang_ao": 0.8
   },
   "googleSheets": {
     "id": "1fReIhw_D38UXtGS1FCkWB7aEXpkR7CrIS3PP_2rKh64",
@@ -60,8 +59,8 @@
   },
   "site": {
     "url": "https://www.78winl.xyz/login",
-    "username": "fgagasdaddad",
-    "password": "WEc57CMVGgngK2b"
+    "username": "djwadaaddwda",
+    "password": "F13251231"
   },
   "gameBet": {
     "that": {
@@ -112,13 +111,13 @@
       "default": "https://t.me/ABA_CONTENT/16",
       "ao": "https://t.me/ABA_CONTENT/16"
     },
-    "lenh_ket_thuc_win_2": {  
+    "lenh_ket_thuc_win_2": {
       "default": "",
       "ao": ""
     },
     "lenh_ket_thuc_win_3": {
       "default": "",
-      "ao": "", 
+      "ao": "",
       "ao_1": "",
       "ao_2": ""
     },

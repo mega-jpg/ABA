@@ -1,0 +1,10 @@
+import { normalizeConfig, isNestedConfig, type NormalizedTelegramConfig } from './normalize-config';
+declare const telegramConfig: NormalizedTelegramConfig;
+export declare function isChiGuiNhomAo(): boolean;
+export declare function getConfigPath(): string;
+export declare function reloadTelegramConfig(): void;
+export declare function readRawConfigFile(): unknown;
+export declare function writeRawConfigFile(raw: unknown): void;
+export declare function readSessionCaOverrideFromConfigFile(): number;
+export declare function setSessionCaOverrideInConfigFile(value: number): void;
+export { telegramConfig, isNestedConfig, normalizeConfig };
