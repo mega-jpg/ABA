@@ -79,7 +79,7 @@
       "default": ""
     },
     "tin_nhan_bat_dau": {
-      "default": "https://t.me/ABA_CONTENT/10",
+      "default": "",
       "ao": "https://t.me/ABA_CONTENT/10"
     },
     "tin_nhan_len_ca": [],
@@ -112,8 +112,8 @@
       "ao": "https://t.me/ABA_CONTENT/16"
     },
     "lenh_ket_thuc_win_2": {
-      "default": "",
-      "ao": ""
+      "default": "https://t.me/ABA_CONTENT/10",
+      "ao": "https://t.me/ABA_CONTENT/10"
     },
     "lenh_ket_thuc_win_3": {
       "default": "",
@@ -152,7 +152,9 @@
       "ao": "https://t.me/ABA_CONTENT/12"
     },
     "tin_nhan_phu": {
-      "default": [],
+      "default": [
+        ""
+      ],
       "ao": []
     }
   },
