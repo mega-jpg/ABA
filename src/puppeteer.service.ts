@@ -1612,9 +1612,10 @@ export class PuppeteerService {
   private getGroupAoIds(): string[] {
     const config = telegramConfig.gui_tin_nhan_vao_group_ao;
     if (Array.isArray(config)) {
-      return config.map(String);
+      return config.map((id) => String(id).trim()).filter(Boolean);
     }
-    return [String(config)];
+    const single = String(config ?? '').trim();
+    return single ? [single] : [];
   }
 
   private getGroupThatIds(): string[] {
