@@ -737,7 +737,21 @@ export class TelegramService {
     if (TELEGRAM_SENDS_TEMP_DISABLED) return;
     try {
       const payload = await this.buildEditedPayloadFromLink(messageLink, editFn);
-      if (!payload) return;
+      if (!payload) {
+        // Không có text từ link — vẫn gửi ảnh không có caption
+        this.logger.log(
+          `⚠️ sendEditedPhotoCaptionFromLink: payload null, gửi ảnh không caption tới ${toChatId}`,
+        );
+        await this.runWithMinGap(
+          toChatId,
+          async () => {
+            if (!this.client.connected) await this.connect();
+            await this.client.sendFile(toChatId, { file: photoPath } as any);
+          },
+          opts?.minGapMs,
+        );
+        return;
+      }
       const { newText, gramEntities } = payload;
 
       await this.runWithMinGap(
