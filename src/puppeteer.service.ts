@@ -1207,20 +1207,21 @@ export class PuppeteerService {
   }
 
   /**
-   * Chờ #iframeGameFullPage + DOM bàn (.result_left / .result_right).
-   * Bắt buộc sau click bàn — kể cả chi_gui_nhom_ao hoặc retry bỏ qua tin Telegram.
+   * Chờ #iframeGameFullPage xuất hiện.
+   * - Có iframe → chụp gửi ngay, không đợi DOM bàn load.
+   * - Chưa có iframe → chờ tối đa 30s rồi chụp gửi luôn.
    */
   private async waitForBaccaratTableReady(
     page: puppeteer.Page,
     options: { maxWaitMs?: number; logTag?: string } = {},
   ): Promise<puppeteer.Frame> {
-    const maxWaitMs = options.maxWaitMs ?? 90_000;
+    const maxWaitMs = options.maxWaitMs ?? 30_000;
     const checkInterval = 1000;
     const maxAttempts = Math.ceil(maxWaitMs / checkInterval);
     const tag = options.logTag ? `${options.logTag} ` : '';
 
     this.logger.log(
-      `⏳ ${tag}Chờ iframeGameFullPage + DOM bàn (tối đa ${maxWaitMs / 1000}s)...`,
+      `⏳ ${tag}Chờ iframeGameFullPage (tối đa ${maxWaitMs / 1000}s)...`,
     );
 
     let lastFoundFrame: puppeteer.Frame | null = null;
@@ -1228,44 +1229,30 @@ export class PuppeteerService {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const found = await this.findGameIframe(page);
       if (found) {
-        lastFoundFrame = found.frame;
-        try {
-          const domReady = await found.frame.evaluate(() => {
-            const player = document.querySelector('.result_left');
-            const banker = document.querySelector('.result_right');
-            return !!(player && banker);
-          });
-          if (domReady) {
-            this.logger.log(
-              `✅ ${tag}Bàn Baccarat sẵn sàng${attempt > 0 ? ` sau ${attempt}s` : ''}`,
-            );
-            return found.frame;
-          }
-        } catch {
-          // iframe chưa gắn DOM
-        }
+        this.logger.log(
+          `✅ ${tag}Đã thấy iframe — chụp gửi ngay${attempt > 0 ? ` (sau ${attempt}s)` : ''}`,
+        );
+        return found.frame;
       }
 
       if (attempt > 0 && attempt % 10 === 0) {
         this.logger.log(
-          `⏳ ${tag}Vẫn chờ bàn load... (${attempt}/${maxAttempts}s)`,
+          `⏳ ${tag}Vẫn chờ iframe... (${attempt}/${maxAttempts}s)`,
         );
       }
       await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
 
-    // Nếu tìm thấy iframe nhưng DOM bàn chưa sẵn sàng — vẫn trả về frame để
-    // chụp ảnh & gửi Telegram tiếp tục. (.result_left/.result_right có thể
-    // chưa xuất hiện giữa các ván — sẽ tự hiện khi ván mới bắt đầu.)
+    // Hết 30s vẫn không thấy iframe — ném lỗi để caller xử lý retry/skip.
     if (lastFoundFrame) {
       this.logger.log(
-        `⚠️ ${tag}DOM bàn chưa sẵn sàng sau ${maxWaitMs / 1000}s nhưng iframe đã tìm thấy — tiếp tục chụp ảnh.`,
+        `⚠️ ${tag}Hết ${maxWaitMs / 1000}s nhưng iframe đã tìm thấy lần cuối — tiếp tục chụp ảnh.`,
       );
       return lastFoundFrame;
     }
 
     throw new Error(
-      'Không tìm thấy iframe iframeGameFullPage / DOM bàn chưa sẵn sàng',
+      'Không tìm thấy iframe iframeGameFullPage sau 30s',
     );
   }
 
@@ -2390,10 +2377,10 @@ export class PuppeteerService {
         }
       }, tableIndex);
 
-      // Đợi bàn load — luôn chờ iframe + DOM (kể cả chi_gui_nhom_ao / retry bỏ qua tin)
+      // Có iframe là chụp gửi ngay, tối đa chờ 30s
       await this.waitForBaccaratTableReady(page, {
         logTag: 'bàn',
-        maxWaitMs: 90_000,
+        maxWaitMs: 30_000,
       });
 
       // Gửi tin nhắn Telegram - KHÔNG throw error nếu lỗi
@@ -2520,7 +2507,7 @@ export class PuppeteerService {
   ): Promise<puppeteer.Frame> {
     return this.waitForBaccaratTableReady(page, {
       logTag: 'ảo',
-      maxWaitMs: 60_000,
+      maxWaitMs: 30_000,
     });
   }
 
