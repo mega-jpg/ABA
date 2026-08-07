@@ -806,16 +806,6 @@ class PuppeteerService {
     static CROP_TOP_VW = 8.5333333333;
     static RESULT_CROP_TOP_PERCENT = 40;
     static RESULT_CROP_BOTTOM_PERCENT = 30;
-    static SCREENSHOT_TARGET_SELECTORS = [
-        '#gameCanvas',
-        'canvas#gameCanvas',
-        '#gameContainer',
-        '.game-container',
-        '.table-container',
-        '#iframeGameFullPage',
-        '#iframeGameHall',
-        'iframe[src*="game"]',
-    ];
     async findGameIframe(page) {
         let fallback = null;
         for (const f of page.frames()) {
@@ -838,7 +828,7 @@ class PuppeteerService {
         return fallback;
     }
     async waitForBaccaratTableReady(page, options = {}) {
-        const maxWaitMs = options.maxWaitMs ?? 90_000;
+        const maxWaitMs = options.maxWaitMs ?? 30_000;
         const checkInterval = 1000;
         const maxAttempts = Math.ceil(maxWaitMs / checkInterval);
         const tag = options.logTag ? `${options.logTag} ` : '';
@@ -859,57 +849,7 @@ class PuppeteerService {
             this.logger.log(`⚠️ ${tag}Hết ${maxWaitMs / 1000}s nhưng iframe đã tìm thấy lần cuối — tiếp tục chụp ảnh.`);
             return lastFoundFrame;
         }
-        throw new Error(`Không tìm thấy iframe iframeGameFullPage sau ${maxWaitMs / 1000}s`);
-    }
-    async resolveScreenshotTarget(page) {
-        const selectors = [...PuppeteerService.SCREENSHOT_TARGET_SELECTORS];
-        return page.evaluate((targetSelectors) => {
-            const candidates = [];
-            for (let i = 0; i < targetSelectors.length; i++) {
-                const selector = targetSelectors[i];
-                const nodes = Array.from(document.querySelectorAll(selector));
-                for (const node of nodes) {
-                    const el = node;
-                    const rect = el.getBoundingClientRect();
-                    const style = window.getComputedStyle(el);
-                    const isVisible = rect.width >= 500 &&
-                        rect.height >= 250 &&
-                        style.visibility !== 'hidden' &&
-                        style.display !== 'none' &&
-                        style.opacity !== '0';
-                    if (!isVisible)
-                        continue;
-                    candidates.push({
-                        selector,
-                        tagName: el.tagName.toLowerCase(),
-                        isIframe: el.tagName.toLowerCase() === 'iframe',
-                        selectorIndex: i,
-                        area: rect.width * rect.height,
-                        bbox: {
-                            x: rect.left,
-                            y: rect.top,
-                            width: rect.width,
-                            height: rect.height,
-                        },
-                    });
-                }
-            }
-            if (candidates.length === 0)
-                return null;
-            candidates.sort((a, b) => {
-                if (a.isIframe !== b.isIframe)
-                    return a.isIframe ? 1 : -1;
-                if (a.selectorIndex !== b.selectorIndex)
-                    return a.selectorIndex - b.selectorIndex;
-                return b.area - a.area;
-            });
-            const best = candidates[0];
-            return {
-                selector: best.selector,
-                tagName: best.tagName,
-                bbox: best.bbox,
-            };
-        }, selectors);
+        throw new Error('Không tìm thấy iframe iframeGameFullPage sau 30s');
     }
     async captureIframeSafely(page, outputPath, options = {}) {
         const MIN_OK_BYTES = 30_000;
@@ -923,14 +863,13 @@ class PuppeteerService {
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
                 const found = await this.findGameIframe(page);
-                const frame = found?.frame ?? null;
-                const target = await this.resolveScreenshotTarget(page);
-                if (!target) {
-                    throw new Error('Không tìm thấy target DOM để chụp bàn');
+                if (!found) {
+                    throw new Error('Không tìm thấy iframe #iframeGameFullPage');
                 }
+                const { frame } = found;
                 await page
-                    .evaluate((selector) => {
-                    const el = document.querySelector(selector);
+                    .evaluate(() => {
+                    const el = document.querySelector('#iframeGameFullPage');
                     if (el?.scrollIntoView) {
                         el.scrollIntoView({ block: 'start', inline: 'start' });
                     }
@@ -939,16 +878,14 @@ class PuppeteerService {
                         el.style.willChange = 'transform';
                         void el.offsetHeight;
                     }
-                }, target.selector)
+                })
                     .catch(() => undefined);
-                if (frame) {
-                    await frame
-                        .evaluate(() => {
-                        void document.body.offsetHeight;
-                        void document.documentElement.offsetHeight;
-                    })
-                        .catch(() => undefined);
-                }
+                await frame
+                    .evaluate(() => {
+                    void document.body.offsetHeight;
+                    void document.documentElement.offsetHeight;
+                })
+                    .catch(() => undefined);
                 await page
                     .evaluate(() => {
                     return new Promise((resolve) => {
@@ -958,36 +895,38 @@ class PuppeteerService {
                     });
                 })
                     .catch(() => undefined);
-                if (frame) {
-                    await frame
-                        .evaluate(() => {
-                        return new Promise((resolve) => {
-                            requestAnimationFrame(() => {
-                                requestAnimationFrame(() => resolve());
-                            });
+                await frame
+                    .evaluate(() => {
+                    return new Promise((resolve) => {
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => resolve());
                         });
-                    })
-                        .catch(() => undefined);
-                }
+                    });
+                })
+                    .catch(() => undefined);
                 const delay = 300 + attempt * 400;
                 await new Promise((resolve) => setTimeout(resolve, delay));
-                const latestTarget = await this.resolveScreenshotTarget(page);
-                const bbox = latestTarget?.bbox;
+                const bbox = await page.evaluate(() => {
+                    const el = document.querySelector('#iframeGameFullPage');
+                    if (!el)
+                        return null;
+                    const rect = el.getBoundingClientRect();
+                    return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+                });
                 if (!bbox || bbox.width <= 0 || bbox.height <= 0) {
-                    throw new Error('Không lấy được bounding box target chụp ảnh');
+                    throw new Error('Không lấy được bounding box của #iframeGameFullPage');
                 }
-                this.logger.log(`📸 ${tag}Target DOM: ${latestTarget?.selector} <${latestTarget?.tagName}> ${Math.round(bbox.width)}x${Math.round(bbox.height)}`);
                 const rawBuffer = (await page.screenshot({
                     type: 'png',
                     clip: { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height },
                     captureBeyondViewport: false,
                 }));
                 await page
-                    .evaluate((selector) => {
-                    const el = document.querySelector(selector);
+                    .evaluate(() => {
+                    const el = document.querySelector('#iframeGameFullPage');
                     if (el)
                         el.style.willChange = '';
-                }, target.selector)
+                })
                     .catch(() => undefined);
                 const meta = await (0, sharp_1.default)(rawBuffer).metadata();
                 const imgW = meta.width ?? 0;
@@ -1516,7 +1455,7 @@ class PuppeteerService {
             }
             this.logger.log('⏳ Đang đợi iframe xuất hiện (có thể load động)...');
             let iframe = null;
-            const maxWaitTime = 90000;
+            const maxWaitTime = 60000;
             const checkInterval = 2000;
             const maxAttempts = maxWaitTime / checkInterval;
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -1584,7 +1523,7 @@ class PuppeteerService {
                 this.logger.error(`❌ URL page: ${page.url()}`);
                 this.logger.error(`❌ Title page: ${pageTitle}`);
                 this.logger.error(`❌ Page content length: ${pageContent.length} characters`);
-                throw new Error('Không tìm thấy iframe iframeGameHall sau 90 giây.');
+                throw new Error('Không tìm thấy iframe iframeGameHall sau 60 giây.');
             }
             let frame = await iframe.contentFrame();
             if (!frame) {
