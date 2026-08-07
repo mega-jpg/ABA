@@ -37,6 +37,7 @@ import {
   getTongKetPercentPerHand,
   normalizeAoProfitPoints,
 } from './ca-profit.util';
+import { detectBaccaratRoundResult } from './baccarat-result-detection';
 
 export type GameResult = 'WIN' | 'LOSE' | 'HOA';
 
@@ -2618,54 +2619,36 @@ export class PuppeteerService {
   private async readBaccaratRoundResult(
     frame: puppeteer.Frame,
   ): Promise<BaccaratRoundResult> {
-    return frame.evaluate(() => {
-      const gameWinnerPlayer = document.querySelector('.result_left');
-      const gameWinnerBanker = document.querySelector('.result_right');
-      const gameWinnerTie = document.querySelector('.zone_result');
-      if (!gameWinnerBanker || !gameWinnerPlayer || !gameWinnerTie) {
-        // Các phần tử chưa sẵn sàng — trả về hasResult: false thay vì throw
-        // để vòng poll tiếp tục chờ thay vì lặp lỗi vô tận
-        return { hasResult: false };
-      }
-      if (
-        gameWinnerPlayer.classList.contains('result_left--win')
-      ) {
-        return {
-          hasResult: true,
-          playerValue:
-            document.querySelector('.result_left__hand-value')?.textContent ||
-            '0',
-          bankerValue:
-            document.querySelector('.result_right__hand-value')?.textContent ||
-            '0',
-          winner: 'Tay Con',
-        };
-      }
-      if (gameWinnerBanker.classList.contains('result_right--win')) {
-        return {
-          hasResult: true,
-          playerValue:
-            document.querySelector('.result_left__hand-value')?.textContent ||
-            '0',
-          bankerValue:
-            document.querySelector('.result_right__hand-value')?.textContent ||
-            '0',
-          winner: 'Nhà Cái',
-        };
-      }
-      if (gameWinnerTie.classList.contains('result_tie')) {
-        return {
-          hasResult: true,
-          playerValue:
-            document.querySelector('.result_left__hand-value')?.textContent ||
-            '0',
-          bankerValue:
-            document.querySelector('.result_right__hand-value')?.textContent ||
-            '0',
-          winner: 'Hòa',
-        };
-      }
-      return { hasResult: false };
+    return frame.evaluate((selectors) => {
+      const playerEl = document.querySelector(selectors.player) as HTMLElement | null;
+      const bankerEl = document.querySelector(selectors.banker) as HTMLElement | null;
+      const tieEl = document.querySelector(selectors.tie) as HTMLElement | null;
+      const playerValue =
+        (document.querySelector(selectors.playerValue) as HTMLElement | null)
+          ?.textContent || '0';
+      const bankerValue =
+        (document.querySelector(selectors.bankerValue) as HTMLElement | null)
+          ?.textContent || '0';
+
+      const snapshot = {
+        playerClassName: playerEl?.className ?? null,
+        bankerClassName: bankerEl?.className ?? null,
+        tieClassName: tieEl?.className ?? null,
+        playerValueText: playerValue,
+        bankerValueText: bankerValue,
+      };
+
+      const detected = (globalThis as typeof globalThis & {
+        detectBaccaratRoundResult?: typeof import('./baccarat-result-detection').detectBaccaratRoundResult;
+      }).detectBaccaratRoundResult?.(snapshot);
+
+      return detected ?? { hasResult: false };
+    }, {
+      player: '.result_left',
+      banker: '.result_right',
+      tie: '.zone_result',
+      playerValue: '.result_left__hand-value',
+      bankerValue: '.result_right__hand-value',
     });
   }
 
@@ -2748,7 +2731,18 @@ export class PuppeteerService {
               cropTopPercent: PuppeteerService.RESULT_CROP_TOP_PERCENT,
               cropBottomPercent: PuppeteerService.RESULT_CROP_BOTTOM_PERCENT,
             };
-      await this.captureIframeSafely(page, resultImagePath, captureOpts);
+      await this.captureIframeSafely(page, resultImagePath, captureOpts).catch(async (error) => {
+        this.logger.error(`❌ Ảnh kết quả nhóm ảo ${groupId} không chụp được:`, error);
+        try {
+          await this.captureIframeSafely(page, resultImagePath, {
+            ...captureOpts,
+            maxRetries: 6,
+            cropTopVw: 0,
+          });
+        } catch (retryError) {
+          this.logger.error(`❌ Retry ảnh kết quả nhóm ảo ${groupId} thất bại:`, retryError);
+        }
+      });
     });
 
     return {
@@ -3177,7 +3171,18 @@ export class PuppeteerService {
               cropTopPercent: PuppeteerService.RESULT_CROP_TOP_PERCENT,
               cropBottomPercent: PuppeteerService.RESULT_CROP_BOTTOM_PERCENT,
             };
-      await this.captureIframeSafely(page, resultImagePath, captureOpts);
+      await this.captureIframeSafely(page, resultImagePath, captureOpts).catch(async (error) => {
+        this.logger.error(`❌ Ảnh kết quả nhóm thật ${groupId} không chụp được:`, error);
+        try {
+          await this.captureIframeSafely(page, resultImagePath, {
+            ...captureOpts,
+            maxRetries: 6,
+            cropTopVw: 0,
+          });
+        } catch (retryError) {
+          this.logger.error(`❌ Retry ảnh kết quả nhóm thật ${groupId} thất bại:`, retryError);
+        }
+      });
     });
 
     try {
