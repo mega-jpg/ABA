@@ -548,8 +548,15 @@ class TelegramService {
             return;
         try {
             const payload = await this.buildEditedPayloadFromLink(messageLink, editFn);
-            if (!payload)
+            if (!payload) {
+                this.logger.log(`⚠️ sendEditedPhotoCaptionFromLink: payload null, gửi ảnh không caption tới ${toChatId}`);
+                await this.runWithMinGap(toChatId, async () => {
+                    if (!this.client.connected)
+                        await this.connect();
+                    await this.client.sendFile(toChatId, { file: photoPath });
+                }, opts?.minGapMs);
                 return;
+            }
             const { newText, gramEntities } = payload;
             await this.runWithMinGap(toChatId, async () => {
                 if (!this.client.connected)
