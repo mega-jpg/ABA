@@ -1065,22 +1065,22 @@ export class PuppeteerService {
       }
       const newPage = await newPagePromise;
 
-      // Set viewport mobile (iPhone X) để có giao diện mobile
+      // Set viewport PC (desktop 1920×1080)
       try {
         await newPage.setViewport({
-          width: 375,
-          height: 812,
-          deviceScaleFactor: 3,
-          isMobile: true,
-          hasTouch: true,
-          isLandscape: false,
+          width: 1920,
+          height: 1080,
+          deviceScaleFactor: 1,
+          isMobile: false,
+          hasTouch: false,
+          isLandscape: true,
         });
         await newPage.setUserAgent(
-          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
         );
-        this.logger.log('📱 Đã set viewport mobile cho page SexyBaccarat');
+        this.logger.log('🖥️ Đã set viewport PC cho page SexyBaccarat');
       } catch (viewportError) {
-        this.logger.error('⚠️ Không set được viewport mobile:', viewportError);
+        this.logger.error('⚠️ Không set được viewport PC:', viewportError);
       }
 
       // Đợi page load (với timeout)
@@ -1257,13 +1257,14 @@ export class PuppeteerService {
   }
 
   /**
-   * Chụp iframe an toàn (DOM mode, mobile) — tránh ảnh trắng & detach frame.
+   * Chụp iframe an toàn (DOM mode, PC) — tránh ảnh trắng & detach frame.
    *
    * Không sờ tới viewport / DOM của iframe (vì site JS sẽ re-mount iframe
    * → frame handle bị detach). Cơ chế:
    * 1. Re-lookup iframe trước mỗi lần chụp để có handle "tươi".
    * 2. Đợi 2 rAF + delay nhỏ cho paint cycle.
-   * 3. `iframe.screenshot()` toàn khung, rồi crop bằng sharp:
+   * 3. Lấy bounding box của `#iframeGameFullPage` rồi dùng `page.screenshot({ clip })`
+   *    (DOM screenshot từ page context — tránh vấn đề OOPIF trắng):
    *    - `cropTopPercent` / `cropBottomPercent` (ảnh kết quả): lấy dải giữa.
    *    - `cropTopVw` (ảnh bàn): cắt header theo vw (1vw = 1% bbox.width).
    * 4. Heuristic phát hiện ảnh trắng → retry tối đa `maxRetries` lần.
@@ -1298,7 +1299,7 @@ export class PuppeteerService {
         if (!found) {
           throw new Error('Không tìm thấy iframe #iframeGameFullPage');
         }
-        const { iframe, frame } = found;
+        const { frame } = found;
 
         // 2) "Wake up" OOPIF — ép Chrome composite lại layer của iframe:
         //    scrollIntoView + chạm vào DOM iframe + force layout trong iframe.
@@ -1350,10 +1351,20 @@ export class PuppeteerService {
         const delay = 300 + attempt * 400;
         await new Promise((resolve) => setTimeout(resolve, delay));
 
-        // 4) Chụp TRỰC TIẾP iframe — đôi khi Chrome ra trắng (OOPIF chưa
-        //    composite kịp), heuristic file-size + retry sẽ tự thử lại.
-        const rawBuffer = (await iframe.screenshot({
+        // 4) Chụp bằng DOM: lấy bounding box của iframe rồi dùng page.screenshot({ clip })
+        //    (tránh vấn đề OOPIF trắng khi chụp trực tiếp iframe element).
+        const bbox = await page.evaluate(() => {
+          const el = document.querySelector('#iframeGameFullPage') as HTMLElement | null;
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+        });
+        if (!bbox || bbox.width <= 0 || bbox.height <= 0) {
+          throw new Error('Không lấy được bounding box của #iframeGameFullPage');
+        }
+        const rawBuffer = (await page.screenshot({
           type: 'png',
+          clip: { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height },
           captureBeyondViewport: false,
         })) as Buffer;
 
