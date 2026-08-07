@@ -1170,17 +1170,28 @@ export class PuppeteerService {
     }
   }
 
-  /** Crop top mặc định: 8.5333333333vw (ẩn phần header của iframe). */
+  /** Crop top mặc định: 8.5333333333vw (ẩn phần header của vùng game). */
   private static readonly CROP_TOP_VW = 8.5333333333;
   /** Ảnh kết quả ván: cắt 40% trên + 30% dưới → giữ dải giữa 30% chiều cao. */
   private static readonly RESULT_CROP_TOP_PERCENT = 40;
   private static readonly RESULT_CROP_BOTTOM_PERCENT = 30;
+  /** Ưu tiên DOM container trước, iframe là fallback cuối. */
+  private static readonly SCREENSHOT_TARGET_SELECTORS = [
+    '#gameCanvas',
+    'canvas#gameCanvas',
+    '#gameContainer',
+    '.game-container',
+    '.table-container',
+    '#iframeGameFullPage',
+    '#iframeGameHall',
+    'iframe[src*="game"]',
+  ] as const;
 
   /**
    * Tìm lại iframe `#iframeGameFullPage` + contentFrame một cách "tươi".
    *
    * Trả về:
-   * - `iframe` = `<iframe id="iframeGameFullPage">` element — DÙNG ĐỂ SCREENSHOT.
+   * - `iframe` = `<iframe id="iframeGameFullPage">` element — fallback cho screenshot.
    * - `frame` = contentFrame của iframe — dùng để `replaceGameMessage`, đọc
    *   DOM kết quả game.
    */
@@ -1225,7 +1236,7 @@ export class PuppeteerService {
     page: puppeteer.Page,
     options: { maxWaitMs?: number; logTag?: string } = {},
   ): Promise<puppeteer.Frame> {
-    const maxWaitMs = options.maxWaitMs ?? 30_000;
+    const maxWaitMs = options.maxWaitMs ?? 90_000;
     const checkInterval = 1000;
     const maxAttempts = Math.ceil(maxWaitMs / checkInterval);
     const tag = options.logTag ? `${options.logTag} ` : '';
@@ -1253,7 +1264,7 @@ export class PuppeteerService {
       await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
 
-    // Hết 30s vẫn không thấy iframe — ném lỗi để caller xử lý retry/skip.
+    // Hết thời gian chờ vẫn không thấy iframe — ném lỗi để caller xử lý retry/skip.
     if (lastFoundFrame) {
       this.logger.log(
         `⚠️ ${tag}Hết ${maxWaitMs / 1000}s nhưng iframe đã tìm thấy lần cuối — tiếp tục chụp ảnh.`,
@@ -1262,16 +1273,86 @@ export class PuppeteerService {
     }
 
     throw new Error(
-      'Không tìm thấy iframe iframeGameFullPage sau 30s',
+      `Không tìm thấy iframe iframeGameFullPage sau ${maxWaitMs / 1000}s`,
     );
   }
 
+  private async resolveScreenshotTarget(
+    page: puppeteer.Page,
+  ): Promise<
+    | {
+        selector: string;
+        tagName: string;
+        bbox: { x: number; y: number; width: number; height: number };
+      }
+    | null
+  > {
+    const selectors = [...PuppeteerService.SCREENSHOT_TARGET_SELECTORS];
+    return page.evaluate((targetSelectors) => {
+      type Candidate = {
+        selector: string;
+        tagName: string;
+        isIframe: boolean;
+        selectorIndex: number;
+        area: number;
+        bbox: { x: number; y: number; width: number; height: number };
+      };
+      const candidates: Candidate[] = [];
+
+      for (let i = 0; i < targetSelectors.length; i++) {
+        const selector = targetSelectors[i];
+        const nodes = Array.from(document.querySelectorAll(selector));
+        for (const node of nodes) {
+          const el = node as HTMLElement;
+          const rect = el.getBoundingClientRect();
+          const style = window.getComputedStyle(el);
+          const isVisible =
+            rect.width >= 500 &&
+            rect.height >= 250 &&
+            style.visibility !== 'hidden' &&
+            style.display !== 'none' &&
+            style.opacity !== '0';
+          if (!isVisible) continue;
+          candidates.push({
+            selector,
+            tagName: el.tagName.toLowerCase(),
+            isIframe: el.tagName.toLowerCase() === 'iframe',
+            selectorIndex: i,
+            area: rect.width * rect.height,
+            bbox: {
+              x: rect.left,
+              y: rect.top,
+              width: rect.width,
+              height: rect.height,
+            },
+          });
+        }
+      }
+
+      if (candidates.length === 0) return null;
+
+      candidates.sort((a, b) => {
+        if (a.isIframe !== b.isIframe) return a.isIframe ? 1 : -1; // DOM trước iframe
+        if (a.selectorIndex !== b.selectorIndex)
+          return a.selectorIndex - b.selectorIndex;
+        return b.area - a.area;
+      });
+
+      const best = candidates[0];
+      return {
+        selector: best.selector,
+        tagName: best.tagName,
+        bbox: best.bbox,
+      };
+    }, selectors);
+  }
+
   /**
-   * Chụp iframe an toàn (DOM mode, PC) — tránh ảnh trắng & detach frame.
+   * Chụp vùng game an toàn (DOM mode, PC) — tránh ảnh trắng & detach frame.
    *
-   * Không sờ tới viewport / DOM của iframe (vì site JS sẽ re-mount iframe
-   * → frame handle bị detach). Cơ chế:
-   * 1. Re-lookup iframe trước mỗi lần chụp để có handle "tươi".
+   * Không phụ thuộc iframe cố định vì site có thể đổi cấu trúc giữa mobile/PC.
+   * Cơ chế:
+   * 1. Re-lookup target DOM trước mỗi lần chụp để có bbox "tươi".
    * 2. Đợi 2 rAF + delay nhỏ cho paint cycle.
    * 3. Lấy bounding box của `#iframeGameFullPage` rồi dùng `page.screenshot({ clip })`
    *    (DOM screenshot từ page context — tránh vấn đề OOPIF trắng):
@@ -1304,20 +1385,19 @@ export class PuppeteerService {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        // 1) Re-lookup iframe + game frame (tránh handle stale)
+        // 1) Re-lookup iframe + game frame (nếu có) và target DOM để chụp
         const found = await this.findGameIframe(page);
-        if (!found) {
-          throw new Error('Không tìm thấy iframe #iframeGameFullPage');
+        const frame = found?.frame ?? null;
+        const target = await this.resolveScreenshotTarget(page);
+        if (!target) {
+          throw new Error('Không tìm thấy target DOM để chụp bàn');
         }
-        const { frame } = found;
 
-        // 2) "Wake up" OOPIF — ép Chrome composite lại layer của iframe:
-        //    scrollIntoView + chạm vào DOM iframe + force layout trong iframe.
+        // 2) "Wake up" layer render:
+        //    scrollIntoView + chạm vào DOM target + force layout trong frame (nếu có).
         await page
-          .evaluate(() => {
-            const el = document.querySelector(
-              '#iframeGameFullPage',
-            ) as HTMLElement | null;
+          .evaluate((selector) => {
+            const el = document.querySelector(selector) as HTMLElement | null;
             if (el?.scrollIntoView) {
               el.scrollIntoView({ block: 'start', inline: 'start' });
             }
@@ -1327,15 +1407,17 @@ export class PuppeteerService {
               el.style.willChange = 'transform';
               void el.offsetHeight;
             }
-          })
+          }, target.selector)
           .catch(() => undefined);
 
-        await frame
-          .evaluate(() => {
-            void document.body.offsetHeight;
-            void document.documentElement.offsetHeight;
-          })
-          .catch(() => undefined);
+        if (frame) {
+          await frame
+            .evaluate(() => {
+              void document.body.offsetHeight;
+              void document.documentElement.offsetHeight;
+            })
+            .catch(() => undefined);
+        }
 
         // 3) Đợi 2 rAF (cả page lẫn frame) + delay tăng theo attempt
         await page
@@ -1347,31 +1429,31 @@ export class PuppeteerService {
             });
           })
           .catch(() => undefined);
-        await frame
-          .evaluate(() => {
-            return new Promise<void>((resolve) => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => resolve());
+        if (frame) {
+          await frame
+            .evaluate(() => {
+              return new Promise<void>((resolve) => {
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => resolve());
+                });
               });
-            });
-          })
-          .catch(() => undefined);
+            })
+            .catch(() => undefined);
+        }
 
         // Delay tăng dần theo lần retry: 300ms → 700ms → 1200ms
         const delay = 300 + attempt * 400;
         await new Promise((resolve) => setTimeout(resolve, delay));
 
-        // 4) Chụp bằng DOM: lấy bounding box của iframe rồi dùng page.screenshot({ clip })
-        //    (tránh vấn đề OOPIF trắng khi chụp trực tiếp iframe element).
-        const bbox = await page.evaluate(() => {
-          const el = document.querySelector('#iframeGameFullPage') as HTMLElement | null;
-          if (!el) return null;
-          const rect = el.getBoundingClientRect();
-          return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
-        });
+        // 4) Chụp bằng DOM: lấy bounding box target mới nhất rồi dùng page.screenshot({ clip })
+        const latestTarget = await this.resolveScreenshotTarget(page);
+        const bbox = latestTarget?.bbox;
         if (!bbox || bbox.width <= 0 || bbox.height <= 0) {
-          throw new Error('Không lấy được bounding box của #iframeGameFullPage');
+          throw new Error('Không lấy được bounding box target chụp ảnh');
         }
+        this.logger.log(
+          `📸 ${tag}Target DOM: ${latestTarget?.selector} <${latestTarget?.tagName}> ${Math.round(bbox.width)}x${Math.round(bbox.height)}`,
+        );
         const rawBuffer = (await page.screenshot({
           type: 'png',
           clip: { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height },
@@ -1380,12 +1462,10 @@ export class PuppeteerService {
 
         // Reset willChange sau chụp
         await page
-          .evaluate(() => {
-            const el = document.querySelector(
-              '#iframeGameFullPage',
-            ) as HTMLElement | null;
+          .evaluate((selector) => {
+            const el = document.querySelector(selector) as HTMLElement | null;
             if (el) el.style.willChange = '';
-          })
+          }, target.selector)
           .catch(() => undefined);
 
         // 5) Crop bằng sharp
@@ -2150,7 +2230,7 @@ export class PuppeteerService {
       // Đợi iframe xuất hiện với polling
       this.logger.log('⏳ Đang đợi iframe xuất hiện (có thể load động)...');
       let iframe: puppeteer.ElementHandle<HTMLIFrameElement> | null = null;
-      const maxWaitTime = 60000;
+      const maxWaitTime = 90000;
       const checkInterval = 2000;
       const maxAttempts = maxWaitTime / checkInterval;
 
@@ -2236,7 +2316,7 @@ export class PuppeteerService {
         this.logger.error(
           `❌ Page content length: ${pageContent.length} characters`,
         );
-        throw new Error('Không tìm thấy iframe iframeGameHall sau 60 giây.');
+        throw new Error('Không tìm thấy iframe iframeGameHall sau 90 giây.');
       }
 
       // Chuyển vào iframe
