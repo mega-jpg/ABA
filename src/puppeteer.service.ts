@@ -1223,9 +1223,12 @@ export class PuppeteerService {
       `⏳ ${tag}Chờ iframeGameFullPage + DOM bàn (tối đa ${maxWaitMs / 1000}s)...`,
     );
 
+    let lastFoundFrame: puppeteer.Frame | null = null;
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const found = await this.findGameIframe(page);
       if (found) {
+        lastFoundFrame = found.frame;
         try {
           const domReady = await found.frame.evaluate(() => {
             const player = document.querySelector('.result_left');
@@ -1249,6 +1252,16 @@ export class PuppeteerService {
         );
       }
       await new Promise((resolve) => setTimeout(resolve, checkInterval));
+    }
+
+    // Nếu tìm thấy iframe nhưng DOM bàn chưa sẵn sàng — vẫn trả về frame để
+    // chụp ảnh & gửi Telegram tiếp tục. (.result_left/.result_right có thể
+    // chưa xuất hiện giữa các ván — sẽ tự hiện khi ván mới bắt đầu.)
+    if (lastFoundFrame) {
+      this.logger.log(
+        `⚠️ ${tag}DOM bàn chưa sẵn sàng sau ${maxWaitMs / 1000}s nhưng iframe đã tìm thấy — tiếp tục chụp ảnh.`,
+      );
+      return lastFoundFrame;
     }
 
     throw new Error(

@@ -829,9 +829,11 @@ class PuppeteerService {
         const maxAttempts = Math.ceil(maxWaitMs / checkInterval);
         const tag = options.logTag ? `${options.logTag} ` : '';
         this.logger.log(`⏳ ${tag}Chờ iframeGameFullPage + DOM bàn (tối đa ${maxWaitMs / 1000}s)...`);
+        let lastFoundFrame = null;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             const found = await this.findGameIframe(page);
             if (found) {
+                lastFoundFrame = found.frame;
                 try {
                     const domReady = await found.frame.evaluate(() => {
                         const player = document.querySelector('.result_left');
@@ -850,6 +852,10 @@ class PuppeteerService {
                 this.logger.log(`⏳ ${tag}Vẫn chờ bàn load... (${attempt}/${maxAttempts}s)`);
             }
             await new Promise((resolve) => setTimeout(resolve, checkInterval));
+        }
+        if (lastFoundFrame) {
+            this.logger.log(`⚠️ ${tag}DOM bàn chưa sẵn sàng sau ${maxWaitMs / 1000}s nhưng iframe đã tìm thấy — tiếp tục chụp ảnh.`);
+            return lastFoundFrame;
         }
         throw new Error('Không tìm thấy iframe iframeGameFullPage / DOM bàn chưa sẵn sàng');
     }
