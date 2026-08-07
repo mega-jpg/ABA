@@ -66,6 +66,7 @@ export declare class PuppeteerService {
     private waitForGameIframeReady;
     private getGroupAoIds;
     private getGroupThatIds;
+    private getGroupBaoBanIds;
     private getThatGroupIndex;
     private getSoTayGroupThat;
     private getSoTayGroupAo;
@@ -80,8 +81,6 @@ export declare class PuppeteerService {
     private escapeHtml;
     private buildBaoBanPhotoCaption;
     private captureTableScreenshot;
-    private sendTablePhotoToSingleGroupAo;
-    private sendTablePhotoToSingleGroupThat;
     private sendTablePhotoToConfiguredGroups;
     private forwardTongKetToSingleGroupAoWithStats;
     private forwardTongKetToSingleGroupThatWithStats;

@@ -1717,6 +1717,16 @@ export class PuppeteerService {
     return single ? [single] : [];
   }
 
+  private getGroupBaoBanIds(): string[] {
+    const config = (telegramConfig as Record<string, unknown>)
+      .gui_tin_nhan_vao_group_bao_ban;
+    if (Array.isArray(config)) {
+      return config.map((id) => String(id).trim()).filter(Boolean);
+    }
+    const single = String(config ?? '').trim();
+    return single ? [single] : [];
+  }
+
   private getThatGroupIndex(groupId: string): number {
     const idx = this.getGroupThatIds().indexOf(String(groupId));
     return idx >= 0 ? idx : 0;
@@ -1876,60 +1886,6 @@ export class PuppeteerService {
     return outputPath;
   }
 
-  private async sendTablePhotoToSingleGroupAo(
-    groupId: string,
-    photoPath: string,
-  ): Promise<void> {
-    const aoIdx = this.getAoGroupIndex(groupId);
-    const link = this.getConfigForwardLink(
-      'link_forward_tin_nhan_bao_ban',
-      true,
-      aoIdx,
-    );
-    if (link) {
-      await this.sendEditedPhotoCaptionFromLinkToSingleGroupAo(
-        groupId,
-        link,
-        photoPath,
-      );
-      return;
-    }
-
-    await this.sendPhotoToSingleGroupAo(
-      groupId,
-      photoPath,
-      this.buildBaoBanPhotoCaption(),
-    );
-  }
-
-  private async sendTablePhotoToSingleGroupThat(
-    groupId: string,
-    photoPath: string,
-  ): Promise<void> {
-    if (isChiGuiNhomAo()) return;
-
-    const thatIdx = this.getThatGroupIndex(groupId);
-    const link = this.getConfigForwardLinkForThat(
-      'link_forward_tin_nhan_bao_ban',
-      thatIdx,
-    );
-    if (link) {
-      await this.telegramService.sendEditedPhotoCaptionFromLink(
-        link,
-        groupId,
-        photoPath,
-        (text) => text,
-      );
-      return;
-    }
-
-    await this.telegramService.sendPhoto(
-      groupId,
-      photoPath,
-      this.buildBaoBanPhotoCaption(),
-    );
-  }
-
   private async sendTablePhotoToConfiguredGroups(
     page: puppeteer.Page,
     ca: number | null,
@@ -1938,61 +1894,71 @@ export class PuppeteerService {
     const thatGroupIds = this.getGroupThatIds()
       .map((id) => id.trim())
       .filter(Boolean);
+    const baoBanGroupIds = this.getGroupBaoBanIds()
+      .map((id) => id.trim())
+      .filter(Boolean);
     const skipAo = Boolean(ca && wasSessionStepDone('bao_ban_ao', ca));
     const skipThat = Boolean(ca && wasSessionStepDone('bao_ban_that', ca));
 
     if (skipAo) {
-      this.logger.log(`♻️ Retry ca ${ca}: bỏ qua "bao_ban_ao" (ảnh bàn đã gửi)`);
+      this.logger.log(
+        `♻️ Retry ca ${ca}: bỏ qua "bao_ban_ao" (đã gửi báo bàn ảo/nhóm báo bàn)`,
+      );
     }
     if (skipThat) {
       this.logger.log(
-        `♻️ Retry ca ${ca}: bỏ qua "bao_ban_that" (ảnh bàn đã gửi)`,
+        `♻️ Retry ca ${ca}: bỏ qua "bao_ban_that" (link báo bàn đã gửi)`,
       );
     }
 
     const shouldSendAo = aoGroupIds.length > 0 && !skipAo;
     const shouldSendThat =
       !isChiGuiNhomAo() && thatGroupIds.length > 0 && !skipThat;
+    const shouldSendBaoBanPhoto = baoBanGroupIds.length > 0 && !skipAo;
 
-    if (!shouldSendAo && !shouldSendThat) {
+    if (!shouldSendAo && !shouldSendThat && !shouldSendBaoBanPhoto) {
+      return;
+    }
+
+    if (shouldSendAo) {
+      await this.forwardMessageToGroupAo(
+        'link_forward_tin_nhan_bao_ban',
+        500,
+        { resolvePerGroupFromConfig: true },
+      );
+      if (ca) markSessionStepDone('bao_ban_ao', ca);
+    }
+
+    if (shouldSendThat) {
+      await this.forwardMessageToGroupThat(
+        'link_forward_tin_nhan_bao_ban',
+        500,
+        { resolvePerGroupFromConfig: true },
+      );
+      if (ca) markSessionStepDone('bao_ban_that', ca);
+    }
+
+    if (!shouldSendBaoBanPhoto) {
       return;
     }
 
     const photoPath = await this.captureTableScreenshot(page);
     try {
-      if (shouldSendAo) {
-        await Promise.all(
-          aoGroupIds.map(async (groupId) => {
-            try {
-              await this.sendTablePhotoToSingleGroupAo(groupId, photoPath);
-              this.logger.log(`✅ Đã gửi ảnh bàn cho group ảo ${groupId}`);
-            } catch (error) {
-              this.logger.error(
-                `❌ Lỗi gửi ảnh bàn cho group ảo ${groupId}:`,
-                error,
-              );
-            }
-          }),
-        );
-        if (ca) markSessionStepDone('bao_ban_ao', ca);
-      }
-
-      if (shouldSendThat) {
-        await Promise.all(
-          thatGroupIds.map(async (groupId) => {
-            try {
-              await this.sendTablePhotoToSingleGroupThat(groupId, photoPath);
-              this.logger.log(`✅ Đã gửi ảnh bàn cho group thật ${groupId}`);
-            } catch (error) {
-              this.logger.error(
-                `❌ Lỗi gửi ảnh bàn cho group thật ${groupId}:`,
-                error,
-              );
-            }
-          }),
-        );
-        if (ca) markSessionStepDone('bao_ban_that', ca);
-      }
+      const caption = this.buildBaoBanPhotoCaption();
+      await Promise.all(
+        baoBanGroupIds.map(async (groupId) => {
+          try {
+            await this.telegramService.sendPhoto(groupId, photoPath, caption);
+            this.logger.log(`✅ Đã gửi ảnh báo bàn cho nhóm báo bàn ${groupId}`);
+          } catch (error) {
+            this.logger.error(
+              `❌ Lỗi gửi ảnh báo bàn cho nhóm báo bàn ${groupId}:`,
+              error,
+            );
+          }
+        }),
+      );
+      if (ca) markSessionStepDone('bao_ban_ao', ca);
     } finally {
       try {
         if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
@@ -2325,7 +2291,7 @@ export class PuppeteerService {
         throw new Error('Không thể truy cập vào iframe');
       }
 
-      // Bỏ chụp hình sảnh + captionBaoBan: group ảo sẽ nhận báo bàn bằng link forward.
+      // Nhóm ảo/nhóm thật nhận báo bàn bằng link; ảnh + caption chỉ gửi nhóm báo bàn riêng.
 
       // Tìm các bàn Baccarat (thử lại tối đa 30 giây nếu chưa render kịp)
       // Mỗi lần thử, duyệt lại tất cả frame của page để bắt được iframe load động

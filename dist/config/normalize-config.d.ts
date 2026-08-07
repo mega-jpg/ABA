@@ -20,6 +20,7 @@ export interface NormalizedTelegramConfig {
     so_tay_group_that?: number[];
     gui_tin_nhan_vao_group_ao?: string | string[];
     so_tay_group_ao?: number[];
+    gui_tin_nhan_vao_group_bao_ban?: string | string[];
     so_ca?: number;
     session_ca_override?: number;
     tong_ket_amount_text?: string;

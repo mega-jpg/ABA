@@ -24,6 +24,7 @@ export interface NormalizedTelegramConfig {
   so_tay_group_that?: number[];
   gui_tin_nhan_vao_group_ao?: string | string[];
   so_tay_group_ao?: number[];
+  gui_tin_nhan_vao_group_bao_ban?: string | string[];
   so_ca?: number;
   session_ca_override?: number;
   tong_ket_amount_text?: string;
@@ -180,6 +181,9 @@ export function normalizeConfig(raw: unknown): NormalizedTelegramConfig {
     so_tay_group_that: pick(that.so_tay, cfg.so_tay_group_that),
     gui_tin_nhan_vao_group_ao: pick(ao.ids, cfg.gui_tin_nhan_vao_group_ao),
     so_tay_group_ao: pick(ao.so_tay, cfg.so_tay_group_ao),
+    gui_tin_nhan_vao_group_bao_ban: pick(
+      cfg.gui_tin_nhan_vao_group_bao_ban,
+    ),
     so_ca: pick(session.so_ca, cfg.so_ca),
     session_ca_override: pick(
       session.session_ca_override,
