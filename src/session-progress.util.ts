@@ -22,6 +22,7 @@ export type SessionTelegramStep =
   | 'bat_dau_that'
   | 'len_ca_that'
   | 'vao_sanh_that'
+  | 'bao_ban_that'
   | 'cho_lenh_that';
   
 interface SessionProgress {
