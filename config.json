@@ -19,7 +19,7 @@
     "chi_gui_nhom_ao": false,
     "that": {
       "ids": [
-        "-1004400184653"
+        ""
       ],
       "so_tay": [
         3
@@ -79,13 +79,13 @@
       "default": ""
     },
     "tin_nhan_bat_dau": {
-      "default": "",
-      "ao": "https://t.me/ABA_CONTENT/10"
+      "default": "https://t.me/ABA_CONTENT/6",
+      "ao": "https://t.me/ABA_CONTENT/6"
     },
     "tin_nhan_len_ca": [],
     "tin_nhan_vao_sanh": {
-      "default": "https://t.me/ABA_CONTENT/6",
-      "ao": "https://t.me/ABA_CONTENT/6"
+      "default": "",
+      "ao": ""
     },
     "tin_nhan_cho_lenh": {
       "default": "https://t.me/ABA_CONTENT/7",
@@ -153,9 +153,13 @@
     },
     "tin_nhan_phu": {
       "default": [
-        ""
+        "https://t.me/ABA_CONTENT/10",
+        "https://t.me/ABA_CONTENT/3"
       ],
-      "ao": []
+      "ao": [
+        "https://t.me/ABA_CONTENT/10",
+        "https://t.me/ABA_CONTENT/3"
+      ]
     }
   },
   "captionBaoBan": [

@@ -1397,16 +1397,24 @@ class PuppeteerService {
             if (!frame) {
                 throw new Error('Không thể truy cập vào iframe');
             }
-            const baccaratElements = await frame.evaluate(() => {
-                const spans = document.querySelectorAll('span');
-                const baccaratSpans = Array.from(spans).filter((span) => span.textContent &&
-                    span.textContent.toLowerCase().includes('baccarat'));
-                return baccaratSpans.slice(0, 5).map((span, index) => ({
-                    index: index + 1,
-                    text: span.textContent?.trim() || '',
-                    element: span,
-                }));
-            });
+            const baccaratMaxWait = 30000;
+            const baccaratCheckInterval = 2000;
+            let baccaratElements = [];
+            for (let elapsed = 0; elapsed < baccaratMaxWait; elapsed += baccaratCheckInterval) {
+                baccaratElements = await frame.evaluate(() => {
+                    const spans = document.querySelectorAll('span');
+                    const baccaratSpans = Array.from(spans).filter((span) => span.textContent &&
+                        span.textContent.toLowerCase().includes('baccarat'));
+                    return baccaratSpans.slice(0, 5).map((span, index) => ({
+                        index: index + 1,
+                        text: span.textContent?.trim() || '',
+                    }));
+                });
+                if (baccaratElements.length > 0)
+                    break;
+                this.logger.log(`⏳ Chưa thấy bàn baccarat trong iframe, đợi thêm ${baccaratCheckInterval / 1000}s... (${elapsed + baccaratCheckInterval}ms/${baccaratMaxWait}ms)`);
+                await new Promise((resolve) => setTimeout(resolve, baccaratCheckInterval));
+            }
             if (baccaratElements.length === 0) {
                 throw new Error('Không tìm thấy bàn baccarat nào');
             }
