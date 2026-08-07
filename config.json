@@ -19,7 +19,7 @@
     "chi_gui_nhom_ao": false,
     "that": {
       "ids": [
-        ""
+        "-1004400184653"
       ],
       "so_tay": [
         3
@@ -32,7 +32,7 @@
       ]
     }
   },
-  "gui_tin_nhan_vao_group_bao_ban": "",
+  "gui_tin_nhan_vao_group_bao_ban": "-5122617756",
   "session": {
     "so_ca": 12,
     "session_ca_override": 1,
