@@ -1190,6 +1190,11 @@ export class PuppeteerService {
     iframe: puppeteer.ElementHandle<HTMLIFrameElement>;
     frame: puppeteer.Frame;
   } | null> {
+    let fallback: {
+      iframe: puppeteer.ElementHandle<HTMLIFrameElement>;
+      frame: puppeteer.Frame;
+    } | null = null;
+
     for (const f of page.frames()) {
       try {
         const found = await f.$('#iframeGameFullPage');
@@ -1199,11 +1204,16 @@ export class PuppeteerService {
         if (inner) {
           return { iframe: handle, frame: inner };
         }
+        // contentFrame() is null for cross-origin OOPIFs — keep element handle
+        // and use the owning frame as fallback so callers don't fail entirely.
+        if (!fallback) {
+          fallback = { iframe: handle, frame: f };
+        }
       } catch {
         // ignore
       }
     }
-    return null;
+    return fallback;
   }
 
   /**
